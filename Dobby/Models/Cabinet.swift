@@ -1,29 +1,38 @@
 import Foundation
-import SwiftData
+import CoreData
 
-@Model
-final class Cabinet: Hashable {
-    static func == (lhs: Cabinet, rhs: Cabinet) -> Bool {
-        lhs.persistentModelID == rhs.persistentModelID
+@objc(Cabinet)
+public class Cabinet: NSManagedObject, Identifiable {
+    @NSManaged public var name: String
+    @NSManaged public var icon: String
+    @NSManaged public var createdAt: Date
+    @NSManaged public var sortOrder: Int64
+    @NSManaged public var room: Room?
+    @NSManaged public var items: NSSet?
+
+    public override func awakeFromInsert() {
+        super.awakeFromInsert()
+        if primitiveValue(forKey: "createdAt") == nil {
+            setPrimitiveValue(Date(), forKey: "createdAt")
+        }
     }
 
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(persistentModelID)
+    var itemsArray: [Item] {
+        let set = items as? Set<Item> ?? []
+        return Array(set)
     }
+}
 
-    var name: String
-    var icon: String
-    var room: Room?
-    @Relationship(deleteRule: .cascade, inverse: \Item.cabinet)
-    var items: [Item] = []
-    var createdAt: Date
-    var sortOrder: Int
+extension Cabinet {
+    @objc(addItemsObject:)
+    @NSManaged public func addToItems(_ value: Item)
 
-    init(name: String, icon: String = "cabinet", room: Room? = nil, sortOrder: Int = 0) {
-        self.name = name
-        self.icon = icon
-        self.room = room
-        self.createdAt = Date()
-        self.sortOrder = sortOrder
-    }
+    @objc(removeItemsObject:)
+    @NSManaged public func removeFromItems(_ value: Item)
+
+    @objc(addItems:)
+    @NSManaged public func addToItems(_ values: NSSet)
+
+    @objc(removeItems:)
+    @NSManaged public func removeFromItems(_ values: NSSet)
 }

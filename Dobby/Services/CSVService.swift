@@ -1,5 +1,5 @@
 import Foundation
-import SwiftData
+import CoreData
 
 struct CSVService {
 
@@ -7,7 +7,6 @@ struct CSVService {
 
     static func exportToCSV(items: [Item]) -> String {
         var lines: [String] = []
-        // Header
         lines.append("房间,柜子,物品名称,分类,数量,备注,过期日期,添加时间")
 
         let dateFormatter = DateFormatter()
@@ -40,7 +39,7 @@ struct CSVService {
 
     static func importFromCSV(
         csvString: String,
-        modelContext: ModelContext,
+        context: NSManagedObjectContext,
         existingRooms: [Room]
     ) -> ImportResult {
         var result = ImportResult()
@@ -54,7 +53,6 @@ struct CSVService {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
 
-        // Build lookup for existing rooms and cabinets
         var roomMap: [String: Room] = [:]
         for room in existingRooms {
             roomMap[room.name] = room
@@ -86,38 +84,42 @@ struct CSVService {
             if let existing = roomMap[roomName] {
                 room = existing
             } else {
-                room = Room(name: roomName)
-                modelContext.insert(room)
-                roomMap[roomName] = room
+                let newRoom = Room(context: context)
+                newRoom.name = roomName
+                newRoom.icon = "door.left.hand.closed"
+                newRoom.sortOrder = 0
+                room = newRoom
+                roomMap[roomName] = newRoom
                 result.roomsCreated += 1
             }
 
             // Find or create cabinet
             let cabinet: Cabinet
-            if let existing = room.cabinets.first(where: { $0.name == cabinetName }) {
+            if let existing = room.cabinetsArray.first(where: { $0.name == cabinetName }) {
                 cabinet = existing
             } else {
-                cabinet = Cabinet(name: cabinetName, room: room)
-                modelContext.insert(cabinet)
-                room.cabinets.append(cabinet)
+                let newCabinet = Cabinet(context: context)
+                newCabinet.name = cabinetName
+                newCabinet.icon = "cabinet"
+                newCabinet.sortOrder = 0
+                newCabinet.room = room
+                cabinet = newCabinet
                 result.cabinetsCreated += 1
             }
 
             // Create item
             let expiryDate = expiryStr.isEmpty ? nil : dateFormatter.date(from: expiryStr)
-            let item = Item(
-                name: itemName,
-                category: category,
-                quantity: max(1, quantity),
-                notes: notes,
-                cabinet: cabinet,
-                expiryDate: expiryDate
-            )
-            modelContext.insert(item)
-            cabinet.items.append(item)
+            let item = Item(context: context)
+            item.name = itemName
+            item.category = category
+            item.quantity = Int64(max(1, quantity))
+            item.notes = notes
+            item.expiryDate = expiryDate
+            item.cabinet = cabinet
             result.itemsCreated += 1
         }
 
+        try? context.save()
         return result
     }
 
@@ -130,7 +132,6 @@ struct CSVService {
         return value
     }
 
-    /// Parse a CSV line, handling quoted fields with commas inside
     static func parseCSVLine(_ line: String) -> [String] {
         var fields: [String] = []
         var current = ""

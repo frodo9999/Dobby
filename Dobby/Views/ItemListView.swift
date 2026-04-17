@@ -1,5 +1,5 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 enum ItemSortOption: String, CaseIterable {
     case dateDesc = "最新添加"
@@ -11,29 +11,27 @@ enum ItemSortOption: String, CaseIterable {
 }
 
 struct ItemListView: View {
-    @Environment(\.modelContext) private var modelContext
-    let cabinet: Cabinet
+    @Environment(\.managedObjectContext) private var viewContext
+    @ObservedObject var cabinet: Cabinet
     @State private var showingAddItem = false
     @State private var editMode: EditMode = .inactive
-    @State private var selectedItems: Set<PersistentIdentifier> = []
+    @State private var selectedItems: Set<NSManagedObjectID> = []
     @State private var showingBatchMoveSheet = false
     @State private var showingBatchDeleteConfirm = false
     @State private var sortOption: ItemSortOption = .dateDesc
     @State private var filterCategory: String? = nil
 
     private var availableCategories: [String] {
-        Array(Set(cabinet.items.compactMap { $0.category.isEmpty ? nil : $0.category })).sorted()
+        Array(Set(cabinet.itemsArray.compactMap { $0.category.isEmpty ? nil : $0.category })).sorted()
     }
 
     private var sortedItems: [Item] {
-        var items = cabinet.items
+        var items = cabinet.itemsArray
 
-        // Filter
         if let category = filterCategory {
             items = items.filter { $0.category == category }
         }
 
-        // Sort
         switch sortOption {
         case .dateDesc:
             return items.sorted { $0.createdAt > $1.createdAt }
@@ -53,7 +51,7 @@ struct ItemListView: View {
     }
 
     private var selectedItemObjects: [Item] {
-        sortedItems.filter { selectedItems.contains($0.persistentModelID) }
+        sortedItems.filter { selectedItems.contains($0.objectID) }
     }
 
     var body: some View {
@@ -62,7 +60,7 @@ struct ItemListView: View {
                 NavigationLink(destination: ItemDetailView(item: item)) {
                     ItemRow(item: item)
                 }
-                .tag(item.persistentModelID)
+                .tag(item.objectID)
             }
             .onDelete(perform: editMode == .inactive ? deleteItems : nil)
         }
@@ -70,9 +68,8 @@ struct ItemListView: View {
         .navigationTitle(cabinet.name)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                if editMode == .inactive && !cabinet.items.isEmpty {
+                if editMode == .inactive && !cabinet.itemsArray.isEmpty {
                     Menu {
-                        // Sort options
                         Section("排序") {
                             ForEach(ItemSortOption.allCases, id: \.self) { option in
                                 Button {
@@ -88,7 +85,6 @@ struct ItemListView: View {
                             }
                         }
 
-                        // Filter by category
                         if !availableCategories.isEmpty {
                             Section("按分类筛选") {
                                 Button {
@@ -128,7 +124,7 @@ struct ItemListView: View {
                     }
                 } else {
                     HStack(spacing: 16) {
-                        if !cabinet.items.isEmpty {
+                        if !cabinet.itemsArray.isEmpty {
                             Button {
                                 editMode = .active
                             } label: {
@@ -180,7 +176,6 @@ struct ItemListView: View {
         }
         .onChange(of: showingBatchMoveSheet) { _, isShowing in
             if !isShowing && !selectedItemObjects.isEmpty == false {
-                // Items were moved, exit edit mode
                 editMode = .inactive
                 selectedItems.removeAll()
             }
@@ -194,7 +189,7 @@ struct ItemListView: View {
             Text("确定要删除选中的 \(selectedItems.count) 件物品吗？此操作无法撤销。")
         }
         .overlay {
-            if cabinet.items.isEmpty {
+            if cabinet.itemsArray.isEmpty {
                 ContentUnavailableView {
                     Label("还没有物品", systemImage: "archivebox")
                 } description: {
@@ -208,23 +203,23 @@ struct ItemListView: View {
         let sorted = sortedItems
         for index in offsets {
             let item = sorted[index]
-            cabinet.items.removeAll { $0.persistentModelID == item.persistentModelID }
-            modelContext.delete(item)
+            viewContext.delete(item)
         }
+        try? viewContext.save()
     }
 
     private func batchDelete() {
         for item in selectedItemObjects {
-            cabinet.items.removeAll { $0.persistentModelID == item.persistentModelID }
-            modelContext.delete(item)
+            viewContext.delete(item)
         }
+        try? viewContext.save()
         selectedItems.removeAll()
         editMode = .inactive
     }
 }
 
 struct ItemRow: View {
-    let item: Item
+    @ObservedObject var item: Item
 
     var body: some View {
         HStack(spacing: 12) {
@@ -262,7 +257,6 @@ struct ItemRow: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                // Always show expiry info when set
                 if let expiryDate = item.expiryDate {
                     ExpiryBadge(expiryDate: expiryDate, status: item.expiryStatus, daysLeft: item.daysUntilExpiry)
                 }

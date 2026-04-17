@@ -1,11 +1,15 @@
 import SwiftUI
-import SwiftData
+import CoreData
+import CloudKit
 import UniformTypeIdentifiers
 
 struct RoomListView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Room.sortOrder) private var rooms: [Room]
-    @Query private var allItems: [Item]
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Room.sortOrder, ascending: true)])
+    private var rooms: FetchedResults<Room>
+    @FetchRequest(sortDescriptors: [])
+    private var allItems: FetchedResults<Item>
+
     @State private var showingAddRoom = false
     @State private var roomToEdit: Room?
     @State private var roomToDelete: Room?
@@ -14,6 +18,7 @@ struct RoomListView: View {
     @State private var showingImportPicker = false
     @State private var showingImportResult = false
     @State private var importResult: CSVService.ImportResult?
+    @State private var shareError: String?
 
     var body: some View {
         NavigationStack {
@@ -54,6 +59,15 @@ struct RoomListView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Menu {
                         Button {
+                            shareHome()
+                        } label: {
+                            Label("邀请家庭成员", systemImage: "person.crop.circle.badge.plus")
+                        }
+                        .disabled(rooms.isEmpty)
+
+                        Divider()
+
+                        Button {
                             exportCSV()
                         } label: {
                             Label("导出数据", systemImage: "square.and.arrow.up")
@@ -80,6 +94,14 @@ struct RoomListView: View {
             }
             .sheet(item: $roomToEdit) { room in
                 AddRoomView(existingRoom: room)
+            }
+            .alert("共享失败", isPresented: Binding(
+                get: { shareError != nil },
+                set: { if !$0 { shareError = nil } }
+            )) {
+                Button("好的") { shareError = nil }
+            } message: {
+                Text(shareError ?? "")
             }
             .sheet(isPresented: $showingExportShare) {
                 if let url = exportFileURL {
@@ -111,7 +133,8 @@ struct RoomListView: View {
             )) {
                 Button("删除", role: .destructive) {
                     if let room = roomToDelete {
-                        modelContext.delete(room)
+                        viewContext.delete(room)
+                        try? viewContext.save()
                         roomToDelete = nil
                     }
                 }
@@ -120,7 +143,7 @@ struct RoomListView: View {
                 }
             } message: {
                 if let room = roomToDelete {
-                    Text("确定要删除「\(room.name)」吗？其中的 \(room.cabinets.count) 个柜子和 \(room.itemCount) 件物品将被一并删除，此操作无法撤销。")
+                    Text("确定要删除「\(room.name)」吗？其中的 \(room.cabinetsArray.count) 个柜子和 \(room.itemCount) 件物品将被一并删除，此操作无法撤销。")
                 }
             }
             .overlay {
@@ -135,8 +158,16 @@ struct RoomListView: View {
         }
     }
 
+    private func shareHome() {
+        CloudSharingPresenter.shared.presentZoneShare(
+            ckContainer: SharingManager.shared.ckContainer
+        ) { errorMsg in
+            self.shareError = errorMsg
+        }
+    }
+
     private func exportCSV() {
-        let csv = CSVService.exportToCSV(items: allItems)
+        let csv = CSVService.exportToCSV(items: Array(allItems))
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd_HHmmss"
         let fileName = "Dobby_\(dateFormatter.string(from: Date())).csv"
@@ -179,8 +210,8 @@ struct RoomListView: View {
 
                 importResult = CSVService.importFromCSV(
                     csvString: cleaned,
-                    modelContext: modelContext,
-                    existingRooms: rooms
+                    context: viewContext,
+                    existingRooms: Array(rooms)
                 )
                 showingImportResult = true
             } catch {
@@ -198,7 +229,7 @@ struct RoomListView: View {
 }
 
 struct RoomRow: View {
-    let room: Room
+    @ObservedObject var room: Room
 
     var body: some View {
         HStack(spacing: 12) {
@@ -210,7 +241,7 @@ struct RoomRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(room.name)
                     .font(.headline)
-                Text("\(room.cabinets.count) 个柜子 · \(room.itemCount) 件物品")
+                Text("\(room.cabinetsArray.count) 个柜子 · \(room.itemCount) 件物品")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

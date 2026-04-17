@@ -1,38 +1,31 @@
 import Foundation
 import SwiftUI
-import SwiftData
+import CoreData
 
-@Model
-final class Item {
-    var name: String
-    var category: String
-    var quantity: Int
-    var notes: String
-    @Attribute(.externalStorage)
-    var photoData: Data?
-    var cabinet: Cabinet?
-    var expiryDate: Date?
-    var createdAt: Date
-    var updatedAt: Date
+@objc(Item)
+public class Item: NSManagedObject, Identifiable {
+    @NSManaged public var name: String
+    @NSManaged public var category: String
+    @NSManaged public var quantity: Int64
+    @NSManaged public var notes: String
+    @NSManaged public var photoData: Data?
+    @NSManaged public var expiryDate: Date?
+    @NSManaged public var createdAt: Date
+    @NSManaged public var updatedAt: Date
+    @NSManaged public var cabinet: Cabinet?
 
-    init(
-        name: String,
-        category: String = "",
-        quantity: Int = 1,
-        notes: String = "",
-        photoData: Data? = nil,
-        cabinet: Cabinet? = nil,
-        expiryDate: Date? = nil
-    ) {
-        self.name = name
-        self.category = category
-        self.quantity = quantity
-        self.notes = notes
-        self.photoData = photoData
-        self.cabinet = cabinet
-        self.expiryDate = expiryDate
-        self.createdAt = Date()
-        self.updatedAt = Date()
+    public override func awakeFromInsert() {
+        super.awakeFromInsert()
+        let now = Date()
+        if primitiveValue(forKey: "createdAt") == nil {
+            setPrimitiveValue(now, forKey: "createdAt")
+        }
+        if primitiveValue(forKey: "updatedAt") == nil {
+            setPrimitiveValue(now, forKey: "updatedAt")
+        }
+        if primitiveValue(forKey: "quantity") == nil {
+            setPrimitiveValue(Int64(1), forKey: "quantity")
+        }
     }
 
     var locationDescription: String {

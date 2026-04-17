@@ -1,8 +1,8 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct AddRoomView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
     var existingRoom: Room?
@@ -60,9 +60,12 @@ struct AddRoomView: View {
                             room.name = name
                             room.icon = selectedIcon
                         } else {
-                            let room = Room(name: name, icon: selectedIcon)
-                            modelContext.insert(room)
+                            let room = Room(context: viewContext)
+                            room.name = name
+                            room.icon = selectedIcon
+                            room.sortOrder = 0
                         }
+                        try? viewContext.save()
                         dismiss()
                     }
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)

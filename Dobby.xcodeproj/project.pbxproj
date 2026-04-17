@@ -25,9 +25,14 @@
 		A1B2C3D400000010 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000111 /* NotificationManager.swift */; };
 		A1B2C3D400000011 /* MoveItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000112 /* MoveItemsView.swift */; };
 		A1B2C3D400000012 /* CSVService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000113 /* CSVService.swift */; };
+		A1B2C3D400000030 /* CloudSharingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000130 /* CloudSharingController.swift */; };
+		A1B2C3D400000031 /* SharingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000131 /* SharingManager.swift */; };
+		A1B2C3D400000020 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000120 /* PersistenceController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7EC4F9C62F8494F000EC8DD9 /* Dobby.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dobby.entitlements; sourceTree = "<group>"; };
+		7EC4F9C72F84951200EC8DD9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A1B2C3D400000101 /* DobbyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DobbyApp.swift; sourceTree = "<group>"; };
 		A1B2C3D400000102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1B2C3D400000103 /* Room.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Room.swift; sourceTree = "<group>"; };
@@ -47,6 +52,9 @@
 		A1B2C3D400000111 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		A1B2C3D400000112 /* MoveItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveItemsView.swift; sourceTree = "<group>"; };
 		A1B2C3D400000113 /* CSVService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVService.swift; sourceTree = "<group>"; };
+		A1B2C3D400000130 /* CloudSharingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSharingController.swift; sourceTree = "<group>"; };
+		A1B2C3D400000131 /* SharingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharingManager.swift; sourceTree = "<group>"; };
+		A1B2C3D400000120 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,8 +79,11 @@
 		A1B2C3D400000302 /* Dobby */ = {
 			isa = PBXGroup;
 			children = (
+				7EC4F9C72F84951200EC8DD9 /* Info.plist */,
+				7EC4F9C62F8494F000EC8DD9 /* Dobby.entitlements */,
 				A1B2C3D400000101 /* DobbyApp.swift */,
 				A1B2C3D400000102 /* ContentView.swift */,
+				A1B2C3D400000120 /* PersistenceController.swift */,
 				A1B2C3D400000303 /* Models */,
 				A1B2C3D400000304 /* Views */,
 				A1B2C3D400000306 /* Services */,
@@ -121,6 +132,8 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D400000113 /* CSVService.swift */,
+				A1B2C3D400000130 /* CloudSharingController.swift */,
+				A1B2C3D400000131 /* SharingManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -211,6 +224,9 @@
 				A1B2C3D400000010 /* NotificationManager.swift in Sources */,
 				A1B2C3D400000011 /* MoveItemsView.swift in Sources */,
 				A1B2C3D400000012 /* CSVService.swift in Sources */,
+				A1B2C3D400000030 /* CloudSharingController.swift in Sources */,
+				A1B2C3D400000031 /* SharingManager.swift in Sources */,
+				A1B2C3D400000020 /* PersistenceController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -341,12 +357,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Dobby/Dobby.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C49L8788KT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Dobby/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机拍摄物品照片";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册选择物品照片";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -376,12 +394,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Dobby/Dobby.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C49L8788KT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Dobby/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机拍摄物品照片";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "需要访问相册选择物品照片";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

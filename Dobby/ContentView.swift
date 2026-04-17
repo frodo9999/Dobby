@@ -1,10 +1,7 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct ContentView: View {
-    @State private var searchText = ""
-    @State private var showingSearch = false
-
     var body: some View {
         TabView {
             RoomListView()
@@ -22,5 +19,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Room.self, Cabinet.self, Item.self], inMemory: true)
+        .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }

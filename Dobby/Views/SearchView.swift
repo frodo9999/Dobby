@@ -1,10 +1,11 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct SearchView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var allItems: [Item]
-    @Query(sort: \Room.sortOrder) private var allRooms: [Room]
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest(sortDescriptors: []) private var allItems: FetchedResults<Item>
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Room.sortOrder, ascending: true)])
+    private var allRooms: FetchedResults<Room>
     @State private var searchText = ""
 
     var filteredItems: [Item] {
@@ -31,7 +32,7 @@ struct SearchView: View {
         var counts: [String: Int] = [:]
         for item in allItems {
             let key = item.category.isEmpty ? "未分类" : item.category
-            counts[key, default: 0] += item.quantity
+            counts[key, default: 0] += Int(item.quantity)
         }
         return counts.map { (category: $0.key, count: $0.value) }.sorted { $0.count > $1.count }
     }
@@ -45,7 +46,6 @@ struct SearchView: View {
         NavigationStack {
             List {
                 if searchText.isEmpty {
-                    // Summary stats
                     Section {
                         let cabinets = Set(allItems.compactMap { $0.cabinet })
                         HStack {
@@ -57,7 +57,6 @@ struct SearchView: View {
                         .listRowBackground(Color.clear)
                     }
 
-                    // Expiry alerts
                     if !expiredItems.isEmpty || !expiringSoonItems.isEmpty {
                         Section("过期提醒") {
                             if !expiredItems.isEmpty {
@@ -93,10 +92,9 @@ struct SearchView: View {
                         }
                     }
 
-                    // Room distribution
                     if !roomStats.isEmpty {
                         Section("各房间物品") {
-                            ForEach(roomStats, id: \.room.persistentModelID) { stat in
+                            ForEach(roomStats, id: \.room.objectID) { stat in
                                 HStack(spacing: 12) {
                                     Image(systemName: stat.room.icon)
                                         .foregroundStyle(.blue)
@@ -113,7 +111,6 @@ struct SearchView: View {
                         }
                     }
 
-                    // Category distribution
                     if !categoryStats.isEmpty {
                         Section("分类统计") {
                             ForEach(categoryStats, id: \.category) { stat in
@@ -131,10 +128,9 @@ struct SearchView: View {
                         }
                     }
 
-                    // Recent items
                     if !allItems.isEmpty {
                         Section("最近添加") {
-                            ForEach(allItems.sorted(by: { $0.createdAt > $1.createdAt }).prefix(10)) { item in
+                            ForEach(allItems.sorted(by: { $0.createdAt > $1.createdAt }).prefix(10), id: \.objectID) { item in
                                 NavigationLink(destination: ItemDetailView(item: item)) {
                                     SearchResultRow(item: item)
                                 }
@@ -145,7 +141,7 @@ struct SearchView: View {
                     ContentUnavailableView.search(text: searchText)
                 } else {
                     Section("搜索结果 (\(filteredItems.count))") {
-                        ForEach(filteredItems) { item in
+                        ForEach(filteredItems, id: \.objectID) { item in
                             NavigationLink(destination: ItemDetailView(item: item)) {
                                 SearchResultRow(item: item)
                             }
@@ -176,7 +172,7 @@ struct ExpiryItemsListView: View {
 
     var body: some View {
         List {
-            ForEach(items.sorted(by: { ($0.expiryDate ?? .distantFuture) < ($1.expiryDate ?? .distantFuture) })) { item in
+            ForEach(items.sorted(by: { ($0.expiryDate ?? .distantFuture) < ($1.expiryDate ?? .distantFuture) }), id: \.objectID) { item in
                 NavigationLink(destination: ItemDetailView(item: item)) {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
@@ -199,7 +195,7 @@ struct ExpiryItemsListView: View {
 }
 
 struct SearchResultRow: View {
-    let item: Item
+    @ObservedObject var item: Item
 
     var body: some View {
         HStack(spacing: 12) {

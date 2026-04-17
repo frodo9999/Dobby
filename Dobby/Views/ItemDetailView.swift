@@ -1,10 +1,10 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct ItemDetailView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
-    let item: Item
+    @ObservedObject var item: Item
     @State private var showingEdit = false
     @State private var showingDeleteConfirm = false
     @State private var showingMoveSheet = false
@@ -12,7 +12,6 @@ struct ItemDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Photo
                 if let photoData = item.photoData, let uiImage = UIImage(data: photoData) {
                     Image(uiImage: uiImage)
                         .resizable()
@@ -21,16 +20,13 @@ struct ItemDetailView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
 
-                // Info card
                 VStack(alignment: .leading, spacing: 12) {
-                    // Location
                     Label(item.locationDescription, systemImage: "location")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
                     Divider()
 
-                    // Category
                     if !item.category.isEmpty {
                         HStack {
                             Text("分类")
@@ -41,7 +37,6 @@ struct ItemDetailView: View {
                         }
                     }
 
-                    // Quantity
                     HStack {
                         Text("数量")
                             .foregroundStyle(.secondary)
@@ -49,7 +44,6 @@ struct ItemDetailView: View {
                         Text("\(item.quantity)")
                     }
 
-                    // Expiry
                     if let expiryDate = item.expiryDate {
                         HStack {
                             Text("过期日期")
@@ -67,7 +61,6 @@ struct ItemDetailView: View {
                         }
                     }
 
-                    // Notes
                     if !item.notes.isEmpty {
                         Divider()
                         VStack(alignment: .leading, spacing: 4) {
@@ -79,7 +72,6 @@ struct ItemDetailView: View {
 
                     Divider()
 
-                    // Dates
                     HStack {
                         Text("添加时间")
                             .foregroundStyle(.secondary)
@@ -131,7 +123,8 @@ struct ItemDetailView: View {
         }
         .alert("确认删除", isPresented: $showingDeleteConfirm) {
             Button("删除", role: .destructive) {
-                modelContext.delete(item)
+                viewContext.delete(item)
+                try? viewContext.save()
                 dismiss()
             }
             Button("取消", role: .cancel) {}

@@ -1,9 +1,9 @@
 import SwiftUI
-import SwiftData
+import CoreData
 import PhotosUI
 
 struct AddItemView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
     let cabinet: Cabinet
@@ -96,7 +96,6 @@ struct AddItemView: View {
             .onChange(of: selectedPhoto) { _, newValue in
                 Task {
                     if let data = try? await newValue?.loadTransferable(type: Data.self) {
-                        // Compress the image
                         if let uiImage = UIImage(data: data) {
                             photoData = uiImage.jpegData(compressionQuality: 0.6)
                         }
@@ -115,7 +114,7 @@ struct AddItemView: View {
                 if let item = existingItem {
                     name = item.name
                     category = item.category
-                    quantity = item.quantity
+                    quantity = Int(item.quantity)
                     notes = item.notes
                     photoData = item.photoData
                     if let date = item.expiryDate {
@@ -132,25 +131,24 @@ struct AddItemView: View {
         if let item = existingItem {
             item.name = name
             item.category = category
-            item.quantity = quantity
+            item.quantity = Int64(quantity)
             item.notes = notes
             item.photoData = photoData
             item.expiryDate = expiry
             item.updatedAt = Date()
-            scheduleNotification(for: name, id: "\(item.persistentModelID)", expiry: expiry)
+            try? viewContext.save()
+            scheduleNotification(for: name, id: item.objectID.uriRepresentation().absoluteString, expiry: expiry)
         } else {
-            let item = Item(
-                name: name,
-                category: category,
-                quantity: quantity,
-                notes: notes,
-                photoData: photoData,
-                cabinet: cabinet,
-                expiryDate: expiry
-            )
-            modelContext.insert(item)
-            cabinet.items.append(item)
-            scheduleNotification(for: name, id: "\(item.persistentModelID)", expiry: expiry)
+            let item = Item(context: viewContext)
+            item.name = name
+            item.category = category
+            item.quantity = Int64(quantity)
+            item.notes = notes
+            item.photoData = photoData
+            item.expiryDate = expiry
+            item.cabinet = cabinet
+            try? viewContext.save()
+            scheduleNotification(for: name, id: item.objectID.uriRepresentation().absoluteString, expiry: expiry)
         }
     }
 

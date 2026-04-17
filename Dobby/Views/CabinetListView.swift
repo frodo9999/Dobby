@@ -1,15 +1,15 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct CabinetListView: View {
-    @Environment(\.modelContext) private var modelContext
-    let room: Room
+    @Environment(\.managedObjectContext) private var viewContext
+    @ObservedObject var room: Room
     @State private var showingAddCabinet = false
     @State private var cabinetToEdit: Cabinet?
     @State private var cabinetToDelete: Cabinet?
 
     private var sortedCabinets: [Cabinet] {
-        room.cabinets.sorted(by: { $0.sortOrder < $1.sortOrder })
+        room.cabinetsArray
     }
 
     var body: some View {
@@ -65,7 +65,8 @@ struct CabinetListView: View {
         )) {
             Button("删除", role: .destructive) {
                 if let cabinet = cabinetToDelete {
-                    modelContext.delete(cabinet)
+                    viewContext.delete(cabinet)
+                    try? viewContext.save()
                     cabinetToDelete = nil
                 }
             }
@@ -74,11 +75,11 @@ struct CabinetListView: View {
             }
         } message: {
             if let cabinet = cabinetToDelete {
-                Text("确定要删除「\(cabinet.name)」吗？其中的 \(cabinet.items.count) 件物品将被一并删除，此操作无法撤销。")
+                Text("确定要删除「\(cabinet.name)」吗？其中的 \(cabinet.itemsArray.count) 件物品将被一并删除，此操作无法撤销。")
             }
         }
         .overlay {
-            if room.cabinets.isEmpty {
+            if sortedCabinets.isEmpty {
                 ContentUnavailableView {
                     Label("还没有柜子", systemImage: "cabinet")
                 } description: {
@@ -90,7 +91,7 @@ struct CabinetListView: View {
 }
 
 struct CabinetRow: View {
-    let cabinet: Cabinet
+    @ObservedObject var cabinet: Cabinet
 
     var body: some View {
         HStack(spacing: 12) {
@@ -102,7 +103,7 @@ struct CabinetRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(cabinet.name)
                     .font(.headline)
-                Text("\(cabinet.items.count) 件物品")
+                Text("\(cabinet.itemsArray.count) 件物品")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

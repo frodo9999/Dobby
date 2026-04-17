@@ -1,8 +1,8 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct AddCabinetView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     let room: Room
 
@@ -61,10 +61,13 @@ struct AddCabinetView: View {
                             cabinet.name = name
                             cabinet.icon = selectedIcon
                         } else {
-                            let cabinet = Cabinet(name: name, icon: selectedIcon, room: room)
-                            modelContext.insert(cabinet)
-                            room.cabinets.append(cabinet)
+                            let cabinet = Cabinet(context: viewContext)
+                            cabinet.name = name
+                            cabinet.icon = selectedIcon
+                            cabinet.sortOrder = 0
+                            cabinet.room = room
                         }
+                        try? viewContext.save()
                         dismiss()
                     }
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)

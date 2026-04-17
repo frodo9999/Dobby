@@ -1,37 +1,37 @@
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct MoveItemsView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \Room.sortOrder) private var rooms: [Room]
+    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Room.sortOrder, ascending: true)])
+    private var rooms: FetchedResults<Room>
 
     let items: [Item]
 
     @State private var searchText = ""
-    @State private var expandedRooms: Set<PersistentIdentifier> = []
+    @State private var expandedRooms: Set<NSManagedObjectID> = []
 
     private var currentCabinet: Cabinet? { items.first?.cabinet }
     private var currentRoom: Room? { currentCabinet?.room }
 
     private var filteredRooms: [Room] {
         if searchText.isEmpty {
-            return rooms
+            return Array(rooms)
         }
         let query = searchText.lowercased()
         return rooms.filter { room in
             room.name.lowercased().contains(query) ||
-            room.cabinets.contains { $0.name.lowercased().contains(query) }
+            room.cabinetsArray.contains { $0.name.lowercased().contains(query) }
         }
     }
 
     private func filteredCabinets(for room: Room) -> [Cabinet] {
-        let sorted = room.cabinets.sorted(by: { $0.sortOrder < $1.sortOrder })
+        let sorted = room.cabinetsArray
         if searchText.isEmpty {
             return sorted
         }
         let query = searchText.lowercased()
-        // If room name matches, show all its cabinets; otherwise filter cabinets
         if room.name.lowercased().contains(query) {
             return sorted
         }
@@ -41,7 +41,6 @@ struct MoveItemsView: View {
     var body: some View {
         NavigationStack {
             List {
-                // Summary section
                 Section {
                     if items.count == 1, let item = items.first {
                         HStack {
@@ -67,25 +66,24 @@ struct MoveItemsView: View {
                     }
                 }
 
-                // Room → Cabinet hierarchy
                 ForEach(filteredRooms) { room in
                     let cabinets = filteredCabinets(for: room)
                     if !cabinets.isEmpty {
                         Section {
                             DisclosureGroup(
                                 isExpanded: Binding(
-                                    get: { expandedRooms.contains(room.persistentModelID) },
+                                    get: { expandedRooms.contains(room.objectID) },
                                     set: { isExpanded in
                                         if isExpanded {
-                                            expandedRooms.insert(room.persistentModelID)
+                                            expandedRooms.insert(room.objectID)
                                         } else {
-                                            expandedRooms.remove(room.persistentModelID)
+                                            expandedRooms.remove(room.objectID)
                                         }
                                     }
                                 )
                             ) {
                                 ForEach(cabinets) { cabinet in
-                                    let isCurrent = cabinet.persistentModelID == currentCabinet?.persistentModelID
+                                    let isCurrent = cabinet.objectID == currentCabinet?.objectID
                                     Button {
                                         moveItems(to: cabinet)
                                     } label: {
@@ -96,7 +94,7 @@ struct MoveItemsView: View {
                                             Text(cabinet.name)
                                                 .foregroundStyle(isCurrent ? .secondary : .primary)
                                             Spacer()
-                                            Text("\(cabinet.items.count) 件")
+                                            Text("\(cabinet.itemsArray.count) 件")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
                                             if isCurrent {
@@ -138,16 +136,14 @@ struct MoveItemsView: View {
                 }
             }
             .onAppear {
-                // Default expand the room containing the current cabinet
                 if let currentRoom {
-                    expandedRooms.insert(currentRoom.persistentModelID)
+                    expandedRooms.insert(currentRoom.objectID)
                 }
             }
             .onChange(of: searchText) { _, newValue in
-                // When searching, expand all matching rooms
                 if !newValue.isEmpty {
                     for room in filteredRooms {
-                        expandedRooms.insert(room.persistentModelID)
+                        expandedRooms.insert(room.objectID)
                     }
                 }
             }
@@ -156,13 +152,10 @@ struct MoveItemsView: View {
 
     private func moveItems(to targetCabinet: Cabinet) {
         for item in items {
-            if let oldCabinet = item.cabinet {
-                oldCabinet.items.removeAll { $0.persistentModelID == item.persistentModelID }
-            }
             item.cabinet = targetCabinet
-            targetCabinet.items.append(item)
             item.updatedAt = Date()
         }
+        try? viewContext.save()
         dismiss()
     }
 }
