@@ -230,6 +230,15 @@ struct RoomListView: View {
 
 struct RoomRow: View {
     @ObservedObject var room: Room
+    @FetchRequest private var items: FetchedResults<Item>
+
+    init(room: Room) {
+        self.room = room
+        _items = FetchRequest(
+            sortDescriptors: [],
+            predicate: NSPredicate(format: "cabinet.room == %@", room)
+        )
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -241,7 +250,7 @@ struct RoomRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(room.name)
                     .font(.headline)
-                Text("\(room.cabinetsArray.count) 个柜子 · \(room.itemCount) 件物品")
+                Text("\(room.cabinetsArray.count) 个柜子 · \(items.count) 件物品")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
