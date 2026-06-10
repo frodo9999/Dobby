@@ -1,0 +1,13 @@
+agent/.venv
+agent/__pycache__
+agent/**/__pycache__
+agent/.env
+agent/tests
+agent/pytest.ini
+AI/
+.git
+Dobby/
+DobbyTests/
+DobbyUITests/
+*.xcodeproj
+*.xcworkspace

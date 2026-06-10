@@ -53,6 +53,7 @@ final class PersistenceController {
             attr("icon", .stringAttributeType, defaultValue: "cabinet"),
             attr("createdAt", .dateAttributeType),
             attr("sortOrder", .integer64AttributeType, defaultValue: 0),
+            attr("contentSummary", .stringAttributeType, defaultValue: ""),
         ]
 
         itemEntity.properties = [

@@ -8,5 +8,7 @@
 	</array>
 	<key>CKSharingSupported</key>
 	<true/>
+	<key>GeminiAPIKey</key>
+	<string>$(GEMINI_API_KEY)</string>
 </dict>
 </plist>

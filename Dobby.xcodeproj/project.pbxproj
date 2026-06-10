@@ -3,10 +3,16 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7E9F8B4E2FD6386900BB6AC0 /* PhotoAddTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B4B2FD6386900BB6AC0 /* PhotoAddTabView.swift */; };
+		7E9F8B4F2FD6386900BB6AC0 /* ItemConfirmView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B4A2FD6386900BB6AC0 /* ItemConfirmView.swift */; };
+		7E9F8B502FD6386900BB6AC0 /* PhotoCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B4C2FD6386900BB6AC0 /* PhotoCaptureView.swift */; };
+		7E9F8B512FD6386900BB6AC0 /* ReceiptReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B4D2FD6386900BB6AC0 /* ReceiptReviewView.swift */; };
+		7E9F8B542FD638C400BB6AC0 /* CabinetInferenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B522FD638C400BB6AC0 /* CabinetInferenceService.swift */; };
+		7E9F8B552FD638C400BB6AC0 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B532FD638C400BB6AC0 /* GeminiService.swift */; };
 		A1B2C3D400000001 /* DobbyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000101 /* DobbyApp.swift */; };
 		A1B2C3D400000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000102 /* ContentView.swift */; };
 		A1B2C3D400000003 /* Room.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000103 /* Room.swift */; };
@@ -25,12 +31,29 @@
 		A1B2C3D400000010 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000111 /* NotificationManager.swift */; };
 		A1B2C3D400000011 /* MoveItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000112 /* MoveItemsView.swift */; };
 		A1B2C3D400000012 /* CSVService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000113 /* CSVService.swift */; };
+		A1B2C3D400000020 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000120 /* PersistenceController.swift */; };
 		A1B2C3D400000030 /* CloudSharingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000130 /* CloudSharingController.swift */; };
 		A1B2C3D400000031 /* SharingManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000131 /* SharingManager.swift */; };
-		A1B2C3D400000020 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000120 /* PersistenceController.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		7E9F8B3B2FD6360000BB6AC0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A1B2C3D400000701 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1B2C3D400000401;
+			remoteInfo = Dobby;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		7E9F8B372FD635FF00BB6AC0 /* DobbyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DobbyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E9F8B4A2FD6386900BB6AC0 /* ItemConfirmView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemConfirmView.swift; sourceTree = "<group>"; };
+		7E9F8B4B2FD6386900BB6AC0 /* PhotoAddTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoAddTabView.swift; sourceTree = "<group>"; };
+		7E9F8B4C2FD6386900BB6AC0 /* PhotoCaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCaptureView.swift; sourceTree = "<group>"; };
+		7E9F8B4D2FD6386900BB6AC0 /* ReceiptReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptReviewView.swift; sourceTree = "<group>"; };
+		7E9F8B522FD638C400BB6AC0 /* CabinetInferenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CabinetInferenceService.swift; sourceTree = "<group>"; };
+		7E9F8B532FD638C400BB6AC0 /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
 		7EC4F9C62F8494F000EC8DD9 /* Dobby.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dobby.entitlements; sourceTree = "<group>"; };
 		7EC4F9C72F84951200EC8DD9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A1B2C3D400000101 /* DobbyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DobbyApp.swift; sourceTree = "<group>"; };
@@ -52,12 +75,23 @@
 		A1B2C3D400000111 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		A1B2C3D400000112 /* MoveItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveItemsView.swift; sourceTree = "<group>"; };
 		A1B2C3D400000113 /* CSVService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVService.swift; sourceTree = "<group>"; };
+		A1B2C3D400000120 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		A1B2C3D400000130 /* CloudSharingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSharingController.swift; sourceTree = "<group>"; };
 		A1B2C3D400000131 /* SharingManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharingManager.swift; sourceTree = "<group>"; };
-		A1B2C3D400000120 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		7E9F8B382FD635FF00BB6AC0 /* DobbyTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = DobbyTests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		7E9F8B342FD635FF00BB6AC0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1B2C3D400000201 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -72,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D400000302 /* Dobby */,
+				7E9F8B382FD635FF00BB6AC0 /* DobbyTests */,
 				A1B2C3D400000305 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -106,6 +141,10 @@
 		A1B2C3D400000304 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7E9F8B4A2FD6386900BB6AC0 /* ItemConfirmView.swift */,
+				7E9F8B4B2FD6386900BB6AC0 /* PhotoAddTabView.swift */,
+				7E9F8B4C2FD6386900BB6AC0 /* PhotoCaptureView.swift */,
+				7E9F8B4D2FD6386900BB6AC0 /* ReceiptReviewView.swift */,
 				A1B2C3D400000106 /* RoomListView.swift */,
 				A1B2C3D400000107 /* AddRoomView.swift */,
 				A1B2C3D400000108 /* CabinetListView.swift */,
@@ -124,6 +163,7 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D400000110 /* Dobby.app */,
+				7E9F8B372FD635FF00BB6AC0 /* DobbyTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -131,6 +171,8 @@
 		A1B2C3D400000306 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				7E9F8B522FD638C400BB6AC0 /* CabinetInferenceService.swift */,
+				7E9F8B532FD638C400BB6AC0 /* GeminiService.swift */,
 				A1B2C3D400000113 /* CSVService.swift */,
 				A1B2C3D400000130 /* CloudSharingController.swift */,
 				A1B2C3D400000131 /* SharingManager.swift */,
@@ -141,6 +183,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		7E9F8B362FD635FF00BB6AC0 /* DobbyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E9F8B3D2FD6360000BB6AC0 /* Build configuration list for PBXNativeTarget "DobbyTests" */;
+			buildPhases = (
+				7E9F8B332FD635FF00BB6AC0 /* Sources */,
+				7E9F8B342FD635FF00BB6AC0 /* Frameworks */,
+				7E9F8B352FD635FF00BB6AC0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7E9F8B3C2FD6360000BB6AC0 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7E9F8B382FD635FF00BB6AC0 /* DobbyTests */,
+			);
+			name = DobbyTests;
+			packageProductDependencies = (
+			);
+			productName = DobbyTests;
+			productReference = 7E9F8B372FD635FF00BB6AC0 /* DobbyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		A1B2C3D400000401 /* Dobby */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A1B2C3D400000601 /* Build configuration list for PBXNativeTarget "Dobby" */;
@@ -165,9 +230,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
+					7E9F8B362FD635FF00BB6AC0 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = A1B2C3D400000401;
+					};
 					A1B2C3D400000401 = {
 						CreatedOnToolsVersion = 15.0;
 					};
@@ -187,11 +256,19 @@
 			projectRoot = "";
 			targets = (
 				A1B2C3D400000401 /* Dobby */,
+				7E9F8B362FD635FF00BB6AC0 /* DobbyTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		7E9F8B352FD635FF00BB6AC0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1B2C3D400000502 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -203,10 +280,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		7E9F8B332FD635FF00BB6AC0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A1B2C3D400000501 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E9F8B542FD638C400BB6AC0 /* CabinetInferenceService.swift in Sources */,
+				7E9F8B552FD638C400BB6AC0 /* GeminiService.swift in Sources */,
 				A1B2C3D400000001 /* DobbyApp.swift in Sources */,
 				A1B2C3D400000002 /* ContentView.swift in Sources */,
 				A1B2C3D400000003 /* Room.swift in Sources */,
@@ -226,13 +312,69 @@
 				A1B2C3D400000012 /* CSVService.swift in Sources */,
 				A1B2C3D400000030 /* CloudSharingController.swift in Sources */,
 				A1B2C3D400000031 /* SharingManager.swift in Sources */,
+				7E9F8B4E2FD6386900BB6AC0 /* PhotoAddTabView.swift in Sources */,
+				7E9F8B4F2FD6386900BB6AC0 /* ItemConfirmView.swift in Sources */,
+				7E9F8B502FD6386900BB6AC0 /* PhotoCaptureView.swift in Sources */,
+				7E9F8B512FD6386900BB6AC0 /* ReceiptReviewView.swift in Sources */,
 				A1B2C3D400000020 /* PersistenceController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		7E9F8B3C2FD6360000BB6AC0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1B2C3D400000401 /* Dobby */;
+			targetProxy = 7E9F8B3B2FD6360000BB6AC0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		7E9F8B3E2FD6360000BB6AC0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = C49L8788KT;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dobby.DobbyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dobby.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Dobby";
+			};
+			name = Debug;
+		};
+		7E9F8B3F2FD6360000BB6AC0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = C49L8788KT;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dobby.DobbyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dobby.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Dobby";
+			};
+			name = Release;
+		};
 		A1B2C3D400000801 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -363,6 +505,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C49L8788KT;
 				ENABLE_PREVIEWS = YES;
+				GEMINI_API_KEY = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Dobby/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机拍摄物品照片";
@@ -400,6 +543,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C49L8788KT;
 				ENABLE_PREVIEWS = YES;
+				GEMINI_API_KEY = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Dobby/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机拍摄物品照片";
@@ -429,6 +573,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7E9F8B3D2FD6360000BB6AC0 /* Build configuration list for PBXNativeTarget "DobbyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E9F8B3E2FD6360000BB6AC0 /* Debug */,
+				7E9F8B3F2FD6360000BB6AC0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		A1B2C3D400000601 /* Build configuration list for PBXNativeTarget "Dobby" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

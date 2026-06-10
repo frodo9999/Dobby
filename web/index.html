@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dobby — AI Home Inventory Agent</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f7; color: #1d1d1f; min-height: 100vh; }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1d1d1f 0%, #2d2d2f 100%);
+      color: white;
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-left h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.3px; }
+    .header-left .subtitle { font-size: 0.85rem; color: #aaa; margin-top: 2px; }
+    .header-badge {
+      font-size: 0.75rem; background: rgba(255,255,255,0.1);
+      padding: 4px 10px; border-radius: 20px; color: #ddd;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      background: white;
+      border-bottom: 1px solid #e5e5e7;
+      padding: 0 40px;
+      position: sticky; top: 0; z-index: 10;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .tab {
+      padding: 16px 24px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      font-size: 0.95rem;
+      color: #666;
+      transition: color 0.15s;
+      user-select: none;
+    }
+    .tab:hover { color: #333; }
+    .tab.active { border-bottom-color: #007aff; color: #007aff; font-weight: 600; }
+
+    /* ── Panels ── */
+    .panel { display: none; padding: 40px; max-width: 860px; margin: 0 auto; }
+    .panel.active { display: block; }
+
+    h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 6px; }
+    p.desc { color: #666; font-size: 0.9rem; line-height: 1.6; margin-bottom: 28px; }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 2px dashed #d0d0d5;
+      border-radius: 14px;
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      background: white;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .upload-zone:hover { border-color: #007aff; background: #f0f7ff; }
+    .upload-zone.has-image { border-color: #34c759; border-style: solid; }
+    .upload-zone input { display: none; }
+    .upload-zone .icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .upload-zone .hint { color: #888; font-size: 0.88rem; margin-top: 6px; }
+    .upload-zone img { max-height: 220px; margin: 16px auto 0; display: block; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+
+    /* ── Toggle ── */
+    .toggle-row {
+      display: flex; align-items: center; gap: 10px;
+      margin: 16px 0; font-size: 0.9rem; color: #444;
+    }
+    .toggle-row input { accent-color: #007aff; width: 16px; height: 16px; cursor: pointer; }
+
+    /* ── Buttons ── */
+    button.primary {
+      background: #007aff; color: white; border: none;
+      padding: 13px 30px; border-radius: 12px;
+      font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; margin-top: 18px;
+      transition: background 0.15s, transform 0.1s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    button.primary:hover:not(:disabled) { background: #0062cc; }
+    button.primary:active:not(:disabled) { transform: scale(0.98); }
+    button.primary:disabled { background: #b0c4de; cursor: not-allowed; }
+    button.confirm-btn {
+      background: #34c759; color: white; border: none;
+      padding: 10px 22px; border-radius: 10px;
+      font-size: 0.88rem; font-weight: 600;
+      cursor: pointer; margin-top: 18px;
+      transition: background 0.15s;
+    }
+    button.confirm-btn:hover { background: #28a745; }
+
+    /* ── Cards ── */
+    .card {
+      background: white; border-radius: 14px;
+      padding: 22px; margin-top: 20px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.07);
+    }
+    .card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 14px; color: #1d1d1f; }
+
+    /* ── Item rows ── */
+    .item-row {
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      padding: 12px 0; border-bottom: 1px solid #f2f2f7;
+    }
+    .item-row:last-of-type { border-bottom: none; }
+    .item-name { font-weight: 600; font-size: 0.95rem; }
+    .item-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .location { color: #888; font-size: 0.82rem; }
+    .reason { color: #666; font-size: 0.82rem; font-style: italic; margin-top: 3px; }
+    .confidence-bar-wrap { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #888; min-width: 60px; text-align: right; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block; padding: 2px 9px;
+      border-radius: 20px; font-size: 0.73rem; font-weight: 600;
+    }
+    .badge.exact    { background: #d1f2e0; color: #1a7a3f; }
+    .badge.substitute { background: #fff3cd; color: #856404; }
+    .badge.related  { background: #ddeeff; color: #0055b3; }
+
+    /* ── Search ── */
+    .search-row { display: flex; gap: 10px; }
+    .search-row input {
+      flex: 1; padding: 13px 18px;
+      border: 1.5px solid #ddd; border-radius: 12px;
+      font-size: 0.95rem; background: white;
+      transition: border-color 0.15s;
+    }
+    .search-row input:focus { outline: none; border-color: #007aff; }
+
+    /* ── Example chips ── */
+    .examples { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+    .chip {
+      padding: 6px 14px; background: white; border: 1.5px solid #ddd;
+      border-radius: 20px; font-size: 0.83rem; color: #444;
+      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .chip:hover { border-color: #007aff; color: #007aff; }
+
+    /* ── States ── */
+    .loading {
+      display: flex; align-items: center; gap: 10px;
+      color: #888; font-size: 0.9rem; margin-top: 20px;
+    }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid #ddd;
+      border-top-color: #007aff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      background: #fff0f0; border: 1px solid #ffc0c0;
+      border-radius: 10px; padding: 12px 16px;
+      color: #c00; font-size: 0.88rem; margin-top: 16px;
+    }
+    .success-msg {
+      background: #f0fff4; border: 1px solid #aae0b8;
+      border-radius: 10px; padding: 12px 16px;
+      color: #1a7a3f; font-size: 0.9rem; font-weight: 500; margin-top: 12px;
+    }
+    .summary-line { font-size: 1rem; font-weight: 600; margin-bottom: 14px; }
+    .suggestion { font-size: 0.85rem; color: #888; margin-top: 14px; }
+
+    /* ── Step indicator ── */
+    .step-indicator {
+      display: flex; gap: 6px; margin-bottom: 20px;
+    }
+    .step {
+      flex: 1; height: 4px; border-radius: 2px; background: #e5e5ea;
+      transition: background 0.3s;
+    }
+    .step.done { background: #34c759; }
+    .step.active { background: #007aff; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div>
+      <h1>🏠 Dobby</h1>
+      <div class="subtitle">AI Home Inventory Agent</div>
+    </div>
+  </div>
+  <div class="header-badge">Powered by Gemini · MongoDB · Elastic</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('intake')">📷 Smart Intake</div>
+  <div class="tab" onclick="switchTab('discovery')">🔍 Inventory Discovery</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ Smart Intake Panel -->
+<div id="panel-intake" class="panel active">
+  <h2>Smart Intake Agent</h2>
+  <p class="desc">
+    Upload a photo of an item or a supermarket receipt. Gemini Vision extracts items automatically,
+    then the agent reasons over your home inventory to recommend the best cabinet for each item —
+    using MongoDB context and multi-step AI reasoning.
+  </p>
+
+  <div id="intake-steps" class="step-indicator">
+    <div class="step active" id="step1"></div>
+    <div class="step" id="step2"></div>
+    <div class="step" id="step3"></div>
+  </div>
+
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept="image/*" onchange="previewImage(this)" />
+    <div class="icon">📷</div>
+    <div id="uploadPrompt" style="font-weight:500;">Click to upload a photo or receipt</div>
+    <div class="hint">Supports JPG, PNG, HEIC</div>
+    <img id="previewImg" style="display:none;" />
+  </div>
+
+  <div class="toggle-row">
+    <input type="checkbox" id="isReceipt" />
+    <label for="isReceipt">This is a receipt (extract multiple items)</label>
+  </div>
+
+  <button class="primary" id="extractBtn" onclick="runIntake()" disabled>
+    <span>✨</span> Analyze with Gemini
+  </button>
+
+  <div id="intakeLoading" class="loading" style="display:none;">
+    <div class="spinner"></div>
+    <span id="intakeLoadingText">Gemini is analyzing the image…</span>
+  </div>
+  <div id="intakeError"></div>
+  <div id="intakeResults"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════ Discovery Panel -->
+<div id="panel-discovery" class="panel">
+  <h2>Inventory Discovery Agent</h2>
+  <p class="desc">
+    Ask any natural language question about your home inventory — direct lookups, intent-based queries,
+    substitute searches, location queries, or expiry checks. The agent searches Elastic then uses Gemini
+    to reason about relevance, substitutes, and intent.
+  </p>
+
+  <div class="search-row">
+    <input type="text" id="discoveryQuery"
+      placeholder="e.g. 有吃的吗 / 能擦玻璃的东西 / 厨房里有什么"
+      onkeydown="if(event.key==='Enter') runDiscovery()" />
+    <button class="primary" style="margin-top:0;" onclick="runDiscovery()">Ask</button>
+  </div>
+
+  <div class="examples">
+    <span class="chip" onclick="setQuery('有牛奶吗')">有牛奶吗</span>
+    <span class="chip" onclick="setQuery('有吃的吗')">有吃的吗 🍎</span>
+    <span class="chip" onclick="setQuery('有什么可以喝的')">有什么可以喝的</span>
+    <span class="chip" onclick="setQuery('厨房里有什么')">厨房里有什么</span>
+    <span class="chip" onclick="setQuery('有快过期的食品吗')">有快过期的食品吗 ⏰</span>
+    <span class="chip" onclick="setQuery('有洗碗液吗')">有洗碗液吗</span>
+  </div>
+
+  <div id="discoveryLoading" class="loading" style="display:none;">
+    <div class="spinner"></div>
+    <span>Agent is searching your inventory…</span>
+  </div>
+  <div id="discoveryError"></div>
+  <div id="discoveryResults"></div>
+</div>
+
+<script>
+  // ── Auto-detect API base URL (works locally and on Cloud Run) ──────────────
+  const API_BASE = window.location.origin;
+
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  function switchTab(name) {
+    const names = ['intake', 'discovery'];
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', names[i] === name));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+  }
+
+  // ── Image preview ──────────────────────────────────────────────────────────
+  let selectedFile = null;
+
+  function previewImage(input) {
+    selectedFile = input.files[0];
+    if (!selectedFile) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById('previewImg');
+      img.src = e.target.result;
+      img.style.display = 'block';
+      document.getElementById('uploadPrompt').textContent = '📎 ' + selectedFile.name;
+      document.getElementById('uploadZone').classList.add('has-image');
+      document.getElementById('extractBtn').disabled = false;
+    };
+    reader.readAsDataURL(selectedFile);
+  }
+
+  function setStep(n) {
+    ['step1','step2','step3'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.className = 'step ' + (i < n ? 'done' : i === n ? 'active' : '');
+    });
+  }
+
+  // ── Smart Intake flow ──────────────────────────────────────────────────────
+  async function runIntake() {
+    if (!selectedFile) return;
+    const isReceipt = document.getElementById('isReceipt').checked;
+    const loadingEl = document.getElementById('intakeLoading');
+    const loadingText = document.getElementById('intakeLoadingText');
+    const errorEl = document.getElementById('intakeError');
+    const resultsEl = document.getElementById('intakeResults');
+
+    loadingEl.style.display = 'flex';
+    errorEl.innerHTML = '';
+    resultsEl.innerHTML = '';
+    document.getElementById('extractBtn').disabled = true;
+    setStep(1);
+
+    try {
+      // Step 1: Extract items from image
+      loadingText.textContent = 'Gemini is analyzing the image…';
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      const extractRes = await fetch(`${API_BASE}/intake/extract?is_receipt=${isReceipt}`, {
+        method: 'POST', body: formData
+      });
+      if (!extractRes.ok) {
+        const err = await extractRes.json().catch(() => ({}));
+        throw new Error(err.detail || extractRes.statusText);
+      }
+      const { items } = await extractRes.json();
+      setStep(2);
+
+      // Step 2: Plan cabinet placement
+      loadingText.textContent = 'Agent is planning cabinet placement…';
+      const planRes = await fetch(`${API_BASE}/intake/plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items })
+      });
+      if (!planRes.ok) {
+        const err = await planRes.json().catch(() => ({}));
+        throw new Error(err.detail || planRes.statusText);
+      }
+      const { plan } = await planRes.json();
+      setStep(3);
+
+      renderIntakeResults(items, plan);
+    } catch (e) {
+      errorEl.innerHTML = `<div class="error-msg">❌ ${e.message}</div>`;
+    } finally {
+      loadingEl.style.display = 'none';
+      document.getElementById('extractBtn').disabled = false;
+    }
+  }
+
+  function renderIntakeResults(items, plan) {
+    const itemMap = {};
+    items.forEach(i => itemMap[i.name] = i);
+
+    let html = `<div class="card">
+      <div class="card-title">📋 Placement Plan — ${plan.length} item${plan.length !== 1 ? 's' : ''}</div>`;
+
+    plan.forEach(p => {
+      const pct = Math.round((p.confidence || 0) * 100);
+      const color = pct === 100 ? '#34c759' : pct >= 70 ? '#007aff' : '#ff9500';
+      html += `<div class="item-row">
+        <div style="flex:1;">
+          <div class="item-name">${p.itemName}</div>
+          <div class="item-meta">
+            <span class="location">📍 ${p.roomName} · ${p.cabinetName}</span>
+          </div>
+          <div class="reason">${p.reason}</div>
+        </div>
+        <div class="confidence-bar-wrap" style="color:${color};">${pct}%</div>
+      </div>`;
+    });
+
+    // Build confirm payload using cabinetId (camelCase) as expected by /intake/confirm
+    const confirmPayload = plan.map(p => ({
+      name: p.itemName,
+      category: itemMap[p.itemName]?.category || '其他',
+      quantity: itemMap[p.itemName]?.quantity || 1,
+      expiryDate: itemMap[p.itemName]?.expiryDate || null,
+      cabinetId: p.recommendedCabinetId,
+    }));
+
+    const encoded = encodeURIComponent(JSON.stringify(confirmPayload));
+    html += `<button class="confirm-btn" onclick="confirmIntake(decodeURIComponent('${encoded}'))">
+      ✅ Confirm & Save All to Inventory
+    </button>`;
+    html += '</div>';
+    document.getElementById('intakeResults').innerHTML = html;
+  }
+
+  async function confirmIntake(itemsJson) {
+    const items = JSON.parse(itemsJson);
+    try {
+      const res = await fetch(`${API_BASE}/intake/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      document.getElementById('intakeResults').insertAdjacentHTML('beforeend',
+        `<div class="success-msg">✅ Saved ${data.count} item${data.count !== 1 ? 's' : ''} to your inventory. They are now searchable.</div>`
+      );
+    } catch(e) {
+      document.getElementById('intakeError').innerHTML = `<div class="error-msg">❌ ${e.message}</div>`;
+    }
+  }
+
+  // ── Inventory Discovery flow ───────────────────────────────────────────────
+  function setQuery(q) {
+    document.getElementById('discoveryQuery').value = q;
+    runDiscovery();
+  }
+
+  async function runDiscovery() {
+    const query = document.getElementById('discoveryQuery').value.trim();
+    if (!query) return;
+
+    const loadingEl = document.getElementById('discoveryLoading');
+    const errorEl = document.getElementById('discoveryError');
+    const resultsEl = document.getElementById('discoveryResults');
+
+    loadingEl.style.display = 'flex';
+    errorEl.innerHTML = '';
+    resultsEl.innerHTML = '';
+
+    try {
+      const res = await fetch(`${API_BASE}/discovery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      renderDiscoveryResults(data);
+    } catch(e) {
+      errorEl.innerHTML = `<div class="error-msg">❌ ${e.message}</div>`;
+    } finally {
+      loadingEl.style.display = 'none';
+    }
+  }
+
+  function renderDiscoveryResults(data) {
+    const icon = data.found ? '✅' : '❌';
+    let html = `<div class="card">
+      <div class="summary-line">${icon} ${data.summary || ''}</div>`;
+
+    (data.items || []).forEach(item => {
+      const cls   = item.matchType === 'exact' ? 'exact' : item.matchType === 'substitute' ? 'substitute' : 'related';
+      const label = item.matchType === 'exact' ? '完全匹配' : item.matchType === 'substitute' ? '替代品' : '相关';
+      html += `<div class="item-row">
+        <div style="flex:1;">
+          <div class="item-meta">
+            <span class="item-name">${item.name}</span>
+            <span class="badge ${cls}">${label}</span>
+          </div>
+          <div class="location">📍 ${item.location || ''} &nbsp;·&nbsp; 数量 ${item.quantity}</div>
+          <div class="reason">${item.reason || ''}</div>
+        </div>
+      </div>`;
+    });
+
+    if (data.suggestion) {
+      html += `<div class="suggestion">💡 ${data.suggestion}</div>`;
+    }
+    html += '</div>';
+    document.getElementById('discoveryResults').innerHTML = html;
+  }
+</script>
+</body>
+</html>

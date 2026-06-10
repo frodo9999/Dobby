@@ -16,3 +16,10 @@ xcuserdata/
 .build/
 Packages/
 Package.resolved
+AI/
+Config.plist
+.env
+agent/__pycache__/
+agent/.venv/
+**/__pycache__/
+*.pyc
