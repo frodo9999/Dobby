@@ -160,37 +160,7 @@ struct ReceiptRowView: View {
                 .labelsHidden()
             }
 
-            // Row 2: Quantity counter  "— N +" (right-aligned)
-            HStack(spacing: 0) {
-                Spacer()
-                Button {
-                    if row.quantity > 1 { row.quantity -= 1 }
-                } label: {
-                    Image(systemName: "minus")
-                        .frame(width: 36, height: 32)
-                        .background(Color(.systemGray5))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                .buttonStyle(.plain)
-
-                Text("\(row.quantity)")
-                    .monospacedDigit()
-                    .frame(minWidth: 40)
-                    .multilineTextAlignment(.center)
-
-                Button {
-                    if row.quantity < 999 { row.quantity += 1 }
-                } label: {
-                    Image(systemName: "plus")
-                        .frame(width: 36, height: 32)
-                        .background(Color(.systemGray5))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                .buttonStyle(.plain)
-            }
-            .font(.subheadline)
-
-            // Row 3: Cabinet
+            // Row 2: Cabinet
             NavigationLink {
                 CabinetPickerView(rooms: rooms, selectedCabinet: $row.cabinet)
             } label: {
@@ -206,6 +176,39 @@ struct ReceiptRowView: View {
                     }
                 }
                 .font(.subheadline)
+            }
+
+            // Row 3: Quantity counter "— N +" (right-aligned, styled)
+            HStack {
+                Spacer()
+                HStack(spacing: 0) {
+                    Button {
+                        if row.quantity > 1 { row.quantity -= 1 }
+                    } label: {
+                        Image(systemName: "minus")
+                            .font(.system(size: 13, weight: .semibold))
+                            .frame(width: 36, height: 32)
+                            .foregroundStyle(.primary)
+                    }
+                    .buttonStyle(.plain)
+
+                    Text("\(row.quantity)")
+                        .font(.system(size: 15, weight: .semibold).monospacedDigit())
+                        .frame(minWidth: 36)
+                        .multilineTextAlignment(.center)
+
+                    Button {
+                        if row.quantity < 999 { row.quantity += 1 }
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 13, weight: .semibold))
+                            .frame(width: 36, height: 32)
+                            .foregroundStyle(.primary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .background(Color(.systemGray5))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
             }
 
             // Row 4: Expiry — only for food and medicine
