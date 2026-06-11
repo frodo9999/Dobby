@@ -6,19 +6,21 @@ import SwiftUI
 struct DiscoveryResult: Decodable {
     let query: String
     let found: Bool
-    let answer: String
+    let answer: String       // mapped from "summary"
     let items: [DiscoveryItem]
-    let explanation: String?
+    let explanation: String? // mapped from "suggestion"
 
     enum CodingKeys: String, CodingKey {
-        case query, found, answer, items, explanation
+        case query, found, items
+        case answer = "summary"
+        case explanation = "suggestion"
     }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         query       = try c.decode(String.self, forKey: .query)
         found       = try c.decode(Bool.self, forKey: .found)
-        answer      = try c.decode(String.self, forKey: .answer)
+        answer      = (try? c.decode(String.self, forKey: .answer)) ?? ""
         items       = (try? c.decode([DiscoveryItem].self, forKey: .items)) ?? []
         explanation = try? c.decode(String.self, forKey: .explanation)
     }
@@ -33,7 +35,7 @@ struct DiscoveryItem: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case name, category, quantity, location
-        case matchType = "match_type"
+        case matchType = "matchType"
     }
 
     init(from decoder: Decoder) throws {
@@ -48,29 +50,23 @@ struct DiscoveryItem: Decodable {
 }
 
 enum MatchType: String, Decodable {
-    case direct
-    case intent
+    case exact
     case substitute
-    case location
-    case expiry
+    case related
 
     var label: String {
         switch self {
-        case .direct:     return "直接匹配"
-        case .intent:     return "意图匹配"
+        case .exact:      return "直接匹配"
         case .substitute: return "替代品"
-        case .location:   return "按位置"
-        case .expiry:     return "按保质期"
+        case .related:    return "相关"
         }
     }
 
     var color: Color {
         switch self {
-        case .direct:     return .green
-        case .intent:     return .blue
+        case .exact:      return .green
         case .substitute: return .orange
-        case .location:   return Color.purple
-        case .expiry:     return .red
+        case .related:    return .blue
         }
     }
 }
