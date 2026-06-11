@@ -155,6 +155,8 @@ struct ReceiptRowView: View {
                 .pickerStyle(.menu)
                 .labelsHidden()
 
+                Spacer()
+
                 Stepper("×\(row.quantity)", value: $row.quantity, in: 1...999)
                     .labelsHidden()
                 HStack(spacing: 4) {
