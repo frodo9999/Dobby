@@ -139,6 +139,8 @@ struct ReceiptRowView: View {
     @Binding var row: ReceiptRow
     let rooms: [Room]
 
+    @State private var showingCabinetPicker = false
+
     private var showsExpiry: Bool {
         row.category == .food || row.category == .medicine
     }
@@ -160,9 +162,9 @@ struct ReceiptRowView: View {
                 .labelsHidden()
             }
 
-            // Row 2: Cabinet (buttonStyle .plain constrains tap area to label only)
-            NavigationLink {
-                CabinetPickerView(rooms: rooms, selectedCabinet: $row.cabinet)
+            // Row 2: Cabinet — Button + sheet avoids NavigationLink tap-area issues in List
+            Button {
+                showingCabinetPicker = true
             } label: {
                 HStack {
                     Image(systemName: "cabinet")
@@ -180,8 +182,14 @@ struct ReceiptRowView: View {
                         .font(.footnote)
                 }
                 .font(.subheadline)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .sheet(isPresented: $showingCabinetPicker) {
+                NavigationStack {
+                    CabinetPickerView(rooms: rooms, selectedCabinet: $row.cabinet)
+                }
+            }
 
             // Row 3: Quantity counter "— N +" (right-aligned, pill with dividers)
             HStack {
