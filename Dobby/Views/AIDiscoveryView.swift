@@ -4,14 +4,13 @@ import SwiftUI
 /// Presented as a sheet from the Search tab — zero changes to SearchView layout.
 struct AIDiscoveryView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var lm: LanguageManager
 
     @State private var query = ""
     @State private var isLoading = false
     @State private var result: DiscoveryResult?
     @State private var errorMessage: String?
     @FocusState private var queryFieldFocused: Bool
-
-    private let chips = ["有吃的吗", "有什么可以喝的", "厨房里有什么", "有快过期的食品吗", "有洗碗液吗", "有药吗"]
 
     var body: some View {
         NavigationStack {
@@ -22,7 +21,7 @@ struct AIDiscoveryView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "sparkle.magnifyingglass")
                             .foregroundStyle(Color.purple)
-                        TextField("问问 AI，例如：有牛奶吗", text: $query)
+                        TextField(lm.s.aiPlaceholder, text: $query)
                             .focused($queryFieldFocused)
                             .submitLabel(.search)
                             .onSubmit { Task { await search() } }
@@ -41,11 +40,11 @@ struct AIDiscoveryView: View {
                     // Example chips
                     if result == nil && !isLoading {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("试试这些")
+                            Text(lm.s.aiTrySuggestions)
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                             FlowLayout(spacing: 8) {
-                                ForEach(chips, id: \.self) { chip in
+                                ForEach(lm.s.aiChips, id: \.self) { chip in
                                     Button {
                                         query = chip
                                         Task { await search() }
@@ -71,7 +70,7 @@ struct AIDiscoveryView: View {
                             VStack(spacing: 12) {
                                 ProgressView()
                                     .scaleEffect(1.2)
-                                Text("AI 正在思考…")
+                                Text(lm.s.aiThinking)
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
@@ -102,11 +101,11 @@ struct AIDiscoveryView: View {
                 .padding()
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("AI 问问")
+            .navigationTitle(lm.s.aiAsk)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") { dismiss() }
+                    Button(lm.s.aiDone) { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -136,7 +135,7 @@ struct AIDiscoveryView: View {
         do {
             result = try await DiscoveryService.discover(query: trimmed)
         } catch {
-            errorMessage = "查询失败：\(error.localizedDescription)"
+            errorMessage = "\(lm.s.aiQueryFailed): \(error.localizedDescription)"
         }
         isLoading = false
     }
@@ -168,7 +167,7 @@ private struct DiscoveryResultView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(result.items.enumerated()), id: \.offset) { index, item in
                         HStack(spacing: 12) {
-                            let category = ItemCategory.allCases.first { $0.rawValue == item.category }
+                            let category = ItemCategory.from(string: item.category)
                             Image(systemName: category?.icon ?? "archivebox")
                                 .frame(width: 32, height: 32)
                                 .background(Color.purple.opacity(0.1))

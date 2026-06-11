@@ -2,21 +2,23 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
+    @EnvironmentObject private var lm: LanguageManager
+
     var body: some View {
         TabView {
             RoomListView()
                 .tabItem {
-                    Label("房间", systemImage: "house")
+                    Label(lm.s.tabRooms, systemImage: "house")
                 }
 
             SearchView()
                 .tabItem {
-                    Label("搜索", systemImage: "magnifyingglass")
+                    Label(lm.s.tabSearch, systemImage: "magnifyingglass")
                 }
 
             PhotoAddTabView()
                 .tabItem {
-                    Label("拍照添加", systemImage: "camera.viewfinder")
+                    Label(lm.s.tabSmartAdd, systemImage: "camera.viewfinder")
                 }
         }
     }

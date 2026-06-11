@@ -6,11 +6,13 @@ import UserNotifications
 struct DobbyApp: App {
     @UIApplicationDelegateAdaptor(DobbyAppDelegate.self) var appDelegate
     let persistenceController = PersistenceController.shared
+    let lm = LanguageManager.shared
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environmentObject(lm)
                 .onAppear {
                     requestNotificationPermission()
                 }

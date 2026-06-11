@@ -27,11 +27,12 @@ enum GeminiServiceError: LocalizedError {
     case noItemsRecognized
 
     var errorDescription: String? {
+        let s = LanguageManager.shared.s
         switch self {
-        case .missingAPIKey:       return "未配置 API Key，请检查设置"
-        case .networkError(let e): return "网络错误：\(e.localizedDescription)"
-        case .invalidResponse:     return "无法解析识别结果，请重试"
-        case .noItemsRecognized:   return "未能识别到任何物品，请重新拍摄"
+        case .missingAPIKey:       return s.errMissingKey
+        case .networkError(let e): return s.errNetwork(e.localizedDescription)
+        case .invalidResponse:     return s.errInvalidResponse
+        case .noItemsRecognized:   return s.errNoItems
         }
     }
 }
@@ -55,7 +56,7 @@ final class MockGeminiService: GeminiServiceProtocol {
 
     func recognizeItem(imageData: Data) async throws -> ItemRecognitionResult {
         if let error = shouldThrow { throw error }
-        return stubbedItem ?? ItemRecognitionResult(name: "测试物品", category: .other, quantity: 1)
+        return stubbedItem ?? ItemRecognitionResult(name: "Test Item", category: .other, quantity: 1)
     }
 
     func recognizeReceipt(imageData: Data) async throws -> [ItemRecognitionResult] {
@@ -103,7 +104,8 @@ final class GeminiService: GeminiServiceProtocol {
     // MARK: Private
 
     private func callExtract(imageData: Data, isReceipt: Bool) async throws -> [ItemRecognitionResult] {
-        let url = URL(string: "\(GeminiService.baseURL)/intake/extract?is_receipt=\(isReceipt)")!
+        let language = LanguageManager.shared.language
+        let url = URL(string: "\(GeminiService.baseURL)/intake/extract?is_receipt=\(isReceipt)&language=\(language)")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
 
@@ -165,7 +167,7 @@ final class GeminiService: GeminiServiceProtocol {
         return response.items.map { dto in
             ItemRecognitionResult(
                 name: dto.name,
-                category: ItemCategory.allCases.first { $0.rawValue == dto.category },
+                category: ItemCategory.from(string: dto.category),
                 quantity: dto.quantity ?? 1,
                 expiryDate: dto.expiryDate.flatMap { dateFormatter.date(from: $0) }
             )

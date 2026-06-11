@@ -4,6 +4,7 @@ import CoreData
 struct MoveItemsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var lm: LanguageManager
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Room.sortOrder, ascending: true)])
     private var rooms: FetchedResults<Room>
 
@@ -44,13 +45,13 @@ struct MoveItemsView: View {
                 Section {
                     if items.count == 1, let item = items.first {
                         HStack {
-                            Text("物品")
+                            Text(lm.s.itemLabel)
                                 .foregroundStyle(.secondary)
                             Spacer()
                             Text(item.name)
                         }
                         HStack {
-                            Text("当前位置")
+                            Text(lm.s.currentLocation)
                                 .foregroundStyle(.secondary)
                             Spacer()
                             Text(item.locationDescription)
@@ -58,10 +59,10 @@ struct MoveItemsView: View {
                         }
                     } else {
                         HStack {
-                            Text("已选择")
+                            Text(lm.s.selected)
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Text("\(items.count) 件物品")
+                            Text(lm.s.selectedCount(n: items.count))
                         }
                     }
                 }
@@ -94,11 +95,11 @@ struct MoveItemsView: View {
                                             Text(cabinet.name)
                                                 .foregroundStyle(isCurrent ? .secondary : .primary)
                                             Spacer()
-                                            Text("\(cabinet.itemsArray.count) 件")
+                                            Text(lm.s.itemCount(n: cabinet.itemsArray.count))
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
                                             if isCurrent {
-                                                Text("当前")
+                                                Text(lm.s.current)
                                                     .font(.caption)
                                                     .foregroundStyle(.white)
                                                     .padding(.horizontal, 8)
@@ -118,7 +119,7 @@ struct MoveItemsView: View {
                                     Text(room.name)
                                         .font(.headline)
                                     Spacer()
-                                    Text("\(cabinets.count) 个柜子")
+                                    Text(lm.s.cabinetCount(n: cabinets.count))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -127,12 +128,12 @@ struct MoveItemsView: View {
                     }
                 }
             }
-            .navigationTitle("移动到")
+            .navigationTitle(lm.s.moveToTitle)
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "搜索柜子...")
+            .searchable(text: $searchText, prompt: lm.s.searchCabinets)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                    Button(lm.s.cancel) { dismiss() }
                 }
             }
             .onAppear {

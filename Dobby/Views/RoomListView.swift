@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 struct RoomListView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject private var lm: LanguageManager
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Room.sortOrder, ascending: true)])
     private var rooms: FetchedResults<Room>
     @FetchRequest(sortDescriptors: [])
@@ -31,12 +32,12 @@ struct RoomListView: View {
                         Button(role: .destructive) {
                             roomToDelete = room
                         } label: {
-                            Label("删除", systemImage: "trash")
+                            Label(lm.s.delete, systemImage: "trash")
                         }
                         Button {
                             roomToEdit = room
                         } label: {
-                            Label("编辑", systemImage: "pencil")
+                            Label(lm.s.edit, systemImage: "pencil")
                         }
                         .tint(.blue)
                     }
@@ -44,24 +45,24 @@ struct RoomListView: View {
                         Button {
                             roomToEdit = room
                         } label: {
-                            Label("编辑", systemImage: "pencil")
+                            Label(lm.s.edit, systemImage: "pencil")
                         }
                         Button(role: .destructive) {
                             roomToDelete = room
                         } label: {
-                            Label("删除", systemImage: "trash")
+                            Label(lm.s.delete, systemImage: "trash")
                         }
                     }
                 }
             }
-            .navigationTitle("我的家")
+            .navigationTitle(lm.s.myHome)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Menu {
                         Button {
                             shareHome()
                         } label: {
-                            Label("邀请家庭成员", systemImage: "person.crop.circle.badge.plus")
+                            Label(lm.s.inviteFamily, systemImage: "person.crop.circle.badge.plus")
                         }
                         .disabled(rooms.isEmpty)
 
@@ -70,14 +71,22 @@ struct RoomListView: View {
                         Button {
                             exportCSV()
                         } label: {
-                            Label("导出数据", systemImage: "square.and.arrow.up")
+                            Label(lm.s.exportData, systemImage: "square.and.arrow.up")
                         }
                         .disabled(allItems.isEmpty)
 
                         Button {
                             showingImportPicker = true
                         } label: {
-                            Label("导入数据", systemImage: "square.and.arrow.down")
+                            Label(lm.s.importData, systemImage: "square.and.arrow.down")
+                        }
+
+                        Divider()
+
+                        Button {
+                            lm.language = lm.isEnglish ? "zh" : "en"
+                        } label: {
+                            Label(lm.s.switchToOtherLang, systemImage: "globe")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -95,11 +104,11 @@ struct RoomListView: View {
             .sheet(item: $roomToEdit) { room in
                 AddRoomView(existingRoom: room)
             }
-            .alert("共享失败", isPresented: Binding(
+            .alert(lm.s.shareFailed, isPresented: Binding(
                 get: { shareError != nil },
                 set: { if !$0 { shareError = nil } }
             )) {
-                Button("好的") { shareError = nil }
+                Button(lm.s.ok) { shareError = nil }
             } message: {
                 Text(shareError ?? "")
             }
@@ -115,43 +124,47 @@ struct RoomListView: View {
             ) { result in
                 handleImport(result)
             }
-            .alert("导入完成", isPresented: $showingImportResult) {
-                Button("好的") {}
+            .alert(lm.s.importComplete, isPresented: $showingImportResult) {
+                Button(lm.s.ok) {}
             } message: {
                 if let r = importResult {
-                    let summary = "成功导入 \(r.itemsCreated) 件物品"
-                    let details = r.roomsCreated > 0 || r.cabinetsCreated > 0
-                        ? "（新建 \(r.roomsCreated) 个房间、\(r.cabinetsCreated) 个柜子）"
-                        : ""
-                    let errors = r.errors.isEmpty ? "" : "\n\n跳过 \(r.errors.count) 行：\(r.errors.first ?? "")"
-                    Text(summary + details + errors)
+                    Text(lm.s.importSummary(
+                        items: r.itemsCreated,
+                        rooms: r.roomsCreated,
+                        cabinets: r.cabinetsCreated,
+                        errors: r.errors
+                    ))
                 }
             }
-            .alert("确认删除", isPresented: Binding(
+            .alert(lm.s.confirmDelete, isPresented: Binding(
                 get: { roomToDelete != nil },
                 set: { if !$0 { roomToDelete = nil } }
             )) {
-                Button("删除", role: .destructive) {
+                Button(lm.s.delete, role: .destructive) {
                     if let room = roomToDelete {
                         viewContext.delete(room)
                         try? viewContext.save()
                         roomToDelete = nil
                     }
                 }
-                Button("取消", role: .cancel) {
+                Button(lm.s.cancel, role: .cancel) {
                     roomToDelete = nil
                 }
             } message: {
                 if let room = roomToDelete {
-                    Text("确定要删除「\(room.name)」吗？其中的 \(room.cabinetsArray.count) 个柜子和 \(room.itemCount) 件物品将被一并删除，此操作无法撤销。")
+                    Text(lm.s.deleteRoomConfirm(
+                        name: room.name,
+                        cabinets: room.cabinetsArray.count,
+                        items: room.itemCount
+                    ))
                 }
             }
             .overlay {
                 if rooms.isEmpty {
                     ContentUnavailableView {
-                        Label("还没有房间", systemImage: "house")
+                        Label(lm.s.noRooms, systemImage: "house")
                     } description: {
-                        Text("点击右上角 + 添加你的第一个房间")
+                        Text(lm.s.addFirstRoom)
                     }
                 }
             }
@@ -201,7 +214,7 @@ struct RoomListView: View {
 
                 guard let content = csvString else {
                     importResult = CSVService.ImportResult()
-                    importResult?.errors.append("无法读取文件编码")
+                    importResult?.errors.append(lm.s.cannotDecodeFile)
                     showingImportResult = true
                     return
                 }
@@ -216,13 +229,13 @@ struct RoomListView: View {
                 showingImportResult = true
             } catch {
                 importResult = CSVService.ImportResult()
-                importResult?.errors.append("读取文件失败：\(error.localizedDescription)")
+                importResult?.errors.append(lm.s.fileReadError(error.localizedDescription))
                 showingImportResult = true
             }
 
         case .failure(let error):
             importResult = CSVService.ImportResult()
-            importResult?.errors.append("选择文件失败：\(error.localizedDescription)")
+            importResult?.errors.append(lm.s.pickFileFailed(error.localizedDescription))
             showingImportResult = true
         }
     }
@@ -230,6 +243,7 @@ struct RoomListView: View {
 
 struct RoomRow: View {
     @ObservedObject var room: Room
+    @EnvironmentObject private var lm: LanguageManager
     @FetchRequest private var items: FetchedResults<Item>
 
     init(room: Room) {
@@ -250,7 +264,7 @@ struct RoomRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(room.name)
                     .font(.headline)
-                Text("\(room.cabinetsArray.count) 个柜子 · \(items.count) 件物品")
+                Text(lm.s.roomSubtitle(cabinets: room.cabinetsArray.count, items: items.count))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -4,6 +4,7 @@ import CoreData
 struct AddRoomView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var lm: LanguageManager
 
     var existingRoom: Room?
 
@@ -28,11 +29,11 @@ struct AddRoomView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("房间名称") {
-                    TextField("例如：主卧、厨房", text: $name)
+                Section(lm.s.roomName) {
+                    TextField(lm.s.roomNamePlaceholder, text: $name)
                 }
 
-                Section("选择图标") {
+                Section(lm.s.chooseIcon) {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 16) {
                         ForEach(roomIcons, id: \.self) { icon in
                             Image(systemName: icon)
@@ -48,14 +49,14 @@ struct AddRoomView: View {
                     .padding(.vertical, 8)
                 }
             }
-            .navigationTitle(isEditing ? "编辑房间" : "添加房间")
+            .navigationTitle(isEditing ? lm.s.editRoom : lm.s.addRoom)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                    Button(lm.s.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "保存" : "添加") {
+                    Button(isEditing ? lm.s.save : lm.s.add) {
                         if let room = existingRoom {
                             room.name = name
                             room.icon = selectedIcon

@@ -3,6 +3,7 @@ import CoreData
 
 struct CabinetListView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject private var lm: LanguageManager
     @ObservedObject var room: Room
     @State private var showingAddCabinet = false
     @State private var cabinetToEdit: Cabinet?
@@ -22,12 +23,12 @@ struct CabinetListView: View {
                     Button(role: .destructive) {
                         cabinetToDelete = cabinet
                     } label: {
-                        Label("删除", systemImage: "trash")
+                        Label(lm.s.delete, systemImage: "trash")
                     }
                     Button {
                         cabinetToEdit = cabinet
                     } label: {
-                        Label("编辑", systemImage: "pencil")
+                        Label(lm.s.edit, systemImage: "pencil")
                     }
                     .tint(.orange)
                 }
@@ -35,12 +36,12 @@ struct CabinetListView: View {
                     Button {
                         cabinetToEdit = cabinet
                     } label: {
-                        Label("编辑", systemImage: "pencil")
+                        Label(lm.s.edit, systemImage: "pencil")
                     }
                     Button(role: .destructive) {
                         cabinetToDelete = cabinet
                     } label: {
-                        Label("删除", systemImage: "trash")
+                        Label(lm.s.delete, systemImage: "trash")
                     }
                 }
             }
@@ -59,31 +60,31 @@ struct CabinetListView: View {
         .sheet(item: $cabinetToEdit) { cabinet in
             AddCabinetView(room: room, existingCabinet: cabinet)
         }
-        .alert("确认删除", isPresented: Binding(
+        .alert(lm.s.confirmDelete, isPresented: Binding(
             get: { cabinetToDelete != nil },
             set: { if !$0 { cabinetToDelete = nil } }
         )) {
-            Button("删除", role: .destructive) {
+            Button(lm.s.delete, role: .destructive) {
                 if let cabinet = cabinetToDelete {
                     viewContext.delete(cabinet)
                     try? viewContext.save()
                     cabinetToDelete = nil
                 }
             }
-            Button("取消", role: .cancel) {
+            Button(lm.s.cancel, role: .cancel) {
                 cabinetToDelete = nil
             }
         } message: {
             if let cabinet = cabinetToDelete {
-                Text("确定要删除「\(cabinet.name)」吗？其中的 \(cabinet.itemsArray.count) 件物品将被一并删除，此操作无法撤销。")
+                Text(lm.s.deleteCabinetConfirm(name: cabinet.name, count: cabinet.itemsArray.count))
             }
         }
         .overlay {
             if sortedCabinets.isEmpty {
                 ContentUnavailableView {
-                    Label("还没有柜子", systemImage: "cabinet")
+                    Label(lm.s.noCabinets, systemImage: "cabinet")
                 } description: {
-                    Text("点击右上角 + 添加柜子")
+                    Text(lm.s.addCabinetHint)
                 }
             }
         }
@@ -92,6 +93,7 @@ struct CabinetListView: View {
 
 struct CabinetRow: View {
     @ObservedObject var cabinet: Cabinet
+    @EnvironmentObject private var lm: LanguageManager
 
     var body: some View {
         HStack(spacing: 12) {
@@ -103,7 +105,7 @@ struct CabinetRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(cabinet.name)
                     .font(.headline)
-                Text("\(cabinet.itemsArray.count) 件物品")
+                Text(lm.s.cabinetSubtitle(count: cabinet.itemsArray.count))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

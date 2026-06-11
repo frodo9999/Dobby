@@ -5,6 +5,7 @@ import SwiftUI
 struct ReceiptReviewView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var lm: LanguageManager
 
     let rooms: [Room]
 
@@ -25,8 +26,9 @@ struct ReceiptReviewView: View {
         NavigationStack {
             Group {
                 if rows.isEmpty {
-                    ContentUnavailableView("没有识别到物品", systemImage: "doc.text.magnifyingglass",
-                        description: Text("请重新拍摄小票"))
+                    ContentUnavailableView(lm.s.noItemsRecognized,
+                        systemImage: "doc.text.magnifyingglass",
+                        description: Text(lm.s.retakeReceipt))
                 } else {
                     List {
                         ForEach($rows) { $row in
@@ -38,14 +40,14 @@ struct ReceiptReviewView: View {
                     }
                 }
             }
-            .navigationTitle("确认小票物品")
+            .navigationTitle(lm.s.confirmReceiptTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                    Button(lm.s.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存全部（\(rows.count)）") {
+                    Button(lm.s.saveAll(count: rows.count)) {
                         saveAll()
                     }
                     .fontWeight(.semibold)
@@ -55,13 +57,13 @@ struct ReceiptReviewView: View {
                     EditButton()
                 }
             }
-            .alert("保存成功", isPresented: Binding(
+            .alert(lm.s.saveSuccess, isPresented: Binding(
                 get: { savedCount != nil },
                 set: { if !$0 { savedCount = nil; dismiss() } }
             )) {
-                Button("好") { savedCount = nil; dismiss() }
+                Button(lm.s.ok) { savedCount = nil; dismiss() }
             } message: {
-                Text("已添加 \(savedCount ?? 0) 件物品")
+                Text(lm.s.savedItems(count: savedCount ?? 0))
             }
         }
     }
@@ -138,6 +140,7 @@ struct ReceiptRow: Identifiable {
 struct ReceiptRowView: View {
     @Binding var row: ReceiptRow
     let rooms: [Room]
+    @EnvironmentObject private var lm: LanguageManager
 
     @State private var showingCabinetPicker = false
 
@@ -150,12 +153,12 @@ struct ReceiptRowView: View {
 
             // Row 1: Name + Category
             HStack {
-                TextField("物品名称", text: $row.name)
+                TextField(lm.s.itemName, text: $row.name)
                     .font(.headline)
                 Spacer()
-                Picker("分类", selection: $row.category) {
+                Picker(lm.s.category, selection: $row.category) {
                     ForEach(ItemCategory.allCases, id: \.self) { cat in
-                        Text(cat.rawValue).tag(cat)
+                        Text(cat.displayName).tag(cat)
                     }
                 }
                 .pickerStyle(.menu)
@@ -173,7 +176,7 @@ struct ReceiptRowView: View {
                         Text(cabinet.room.map { "\($0.name) · \(cabinet.name)" } ?? cabinet.name)
                             .foregroundStyle(.secondary)
                     } else {
-                        Text("请选择存放位置")
+                        Text(lm.s.selectStorageLocation)
                             .foregroundStyle(.red)
                     }
                     Spacer()
@@ -234,9 +237,9 @@ struct ReceiptRowView: View {
             // Row 4: Expiry — only for food and medicine
             if showsExpiry {
                 HStack {
-                    Toggle("保质期", isOn: $row.hasExpiryDate)
+                    Toggle(lm.s.expiryToggle, isOn: $row.hasExpiryDate)
                         .labelsHidden()
-                    Text("保质期")
+                    Text(lm.s.expiryToggle)
                         .foregroundStyle(.secondary)
                         .font(.subheadline)
                     if row.hasExpiryDate {
@@ -253,11 +256,12 @@ struct ReceiptRowView: View {
 #Preview {
     ReceiptReviewView(
         recognitionResults: [
-            ItemRecognitionResult(name: "苹果汁", category: .food, quantity: 2),
-            ItemRecognitionResult(name: "洗发水", category: .other, quantity: 1)
+            ItemRecognitionResult(name: "Apple Juice", category: .food, quantity: 2),
+            ItemRecognitionResult(name: "Shampoo", category: .other, quantity: 1)
         ],
         rooms: []
     )
     .environment(\.managedObjectContext,
         PersistenceController.preview.container.viewContext)
+    .environmentObject(LanguageManager.shared)
 }

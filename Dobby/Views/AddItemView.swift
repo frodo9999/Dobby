@@ -5,6 +5,7 @@ import PhotosUI
 struct AddItemView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var lm: LanguageManager
 
     let cabinet: Cabinet
     var existingItem: Item?
@@ -25,20 +26,20 @@ struct AddItemView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("基本信息") {
-                    TextField("物品名称", text: $name)
+                Section(lm.s.basicInfo) {
+                    TextField(lm.s.itemName, text: $name)
 
-                    Picker("分类", selection: $category) {
-                        Text("无分类").tag("")
+                    Picker(lm.s.category, selection: $category) {
+                        Text(lm.s.noCategory).tag("")
                         ForEach(ItemCategory.allCases, id: \.rawValue) { cat in
-                            Label(cat.rawValue, systemImage: cat.icon).tag(cat.rawValue)
+                            Label(cat.displayName, systemImage: cat.icon).tag(cat.rawValue)
                         }
                     }
 
-                    Stepper("数量: \(quantity)", value: $quantity, in: 1...9999)
+                    Stepper(lm.s.quantityStepper(n: quantity), value: $quantity, in: 1...9999)
                 }
 
-                Section("照片") {
+                Section(lm.s.photo) {
                     if let photoData, let uiImage = UIImage(data: photoData) {
                         Image(uiImage: uiImage)
                             .resizable()
@@ -46,14 +47,14 @@ struct AddItemView: View {
                             .frame(maxHeight: 200)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                        Button("移除照片", role: .destructive) {
+                        Button(lm.s.removePhoto, role: .destructive) {
                             self.photoData = nil
                             self.selectedPhoto = nil
                         }
                     }
 
                     PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                        Label("从相册选择", systemImage: "photo.on.rectangle")
+                        Label(lm.s.fromLibrary, systemImage: "photo.on.rectangle")
                     }
 
                     Button {
@@ -63,30 +64,30 @@ struct AddItemView: View {
                             showingCameraAlert = true
                         }
                     } label: {
-                        Label("拍照", systemImage: "camera")
+                        Label(lm.s.takePhoto, systemImage: "camera")
                     }
                 }
 
-                Section("过期日期") {
-                    Toggle("设置过期日期", isOn: $hasExpiryDate)
+                Section(lm.s.expirySection) {
+                    Toggle(lm.s.setExpiry, isOn: $hasExpiryDate)
                     if hasExpiryDate {
-                        DatePicker("过期日期", selection: $expiryDate, displayedComponents: .date)
+                        DatePicker(lm.s.expiryDate, selection: $expiryDate, displayedComponents: .date)
                     }
                 }
 
-                Section("备注") {
-                    TextField("可选备注", text: $notes, axis: .vertical)
+                Section(lm.s.notes) {
+                    TextField(lm.s.notesPlaceholder, text: $notes, axis: .vertical)
                         .lineLimit(3...6)
                 }
             }
-            .navigationTitle(isEditing ? "编辑物品" : "添加物品")
+            .navigationTitle(isEditing ? lm.s.editItem : lm.s.addItem)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                    Button(lm.s.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "保存" : "添加") {
+                    Button(isEditing ? lm.s.save : lm.s.add) {
                         saveItem()
                         dismiss()
                     }
@@ -105,10 +106,10 @@ struct AddItemView: View {
             .fullScreenCover(isPresented: $showingCamera) {
                 CameraView(photoData: $photoData)
             }
-            .alert("无法使用相机", isPresented: $showingCameraAlert) {
-                Button("好的", role: .cancel) {}
+            .alert(lm.s.cameraUnavailable, isPresented: $showingCameraAlert) {
+                Button(lm.s.ok, role: .cancel) {}
             } message: {
-                Text("当前设备不支持相机，请使用相册选择图片")
+                Text(lm.s.cameraUnavailableMsg)
             }
             .onAppear {
                 if let item = existingItem {

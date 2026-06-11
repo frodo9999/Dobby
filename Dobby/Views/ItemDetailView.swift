@@ -4,6 +4,7 @@ import CoreData
 struct ItemDetailView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var lm: LanguageManager
     @ObservedObject var item: Item
     @State private var showingEdit = false
     @State private var showingDeleteConfirm = false
@@ -29,16 +30,16 @@ struct ItemDetailView: View {
 
                     if !item.category.isEmpty {
                         HStack {
-                            Text("分类")
+                            Text(lm.s.category)
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            let category = ItemCategory.allCases.first { $0.rawValue == item.category }
+                            let category = ItemCategory.from(string: item.category)
                             Label(item.category, systemImage: category?.icon ?? "tag")
                         }
                     }
 
                     HStack {
-                        Text("数量")
+                        Text(lm.s.quantity)
                             .foregroundStyle(.secondary)
                         Spacer()
                         Text("\(item.quantity)")
@@ -46,13 +47,17 @@ struct ItemDetailView: View {
 
                     if let expiryDate = item.expiryDate {
                         HStack {
-                            Text("过期日期")
+                            Text(lm.s.expiryDate)
                                 .foregroundStyle(.secondary)
                             Spacer()
                             VStack(alignment: .trailing, spacing: 2) {
                                 Text(expiryDate, style: .date)
                                 if let days = item.daysUntilExpiry {
-                                    Text(days < 0 ? "已过期 \(-days) 天" : days == 0 ? "今天过期" : "还剩 \(days) 天")
+                                    Text(days < 0
+                                         ? lm.s.expiryDaysExpired(days: days)
+                                         : days == 0
+                                            ? lm.s.expiryToday
+                                            : lm.s.expiryDaysRemaining(days: days))
                                         .font(.caption)
                                         .foregroundStyle(item.expiryStatus.color)
                                         .bold()
@@ -64,7 +69,7 @@ struct ItemDetailView: View {
                     if !item.notes.isEmpty {
                         Divider()
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("备注")
+                            Text(lm.s.notes)
                                 .foregroundStyle(.secondary)
                             Text(item.notes)
                         }
@@ -73,7 +78,7 @@ struct ItemDetailView: View {
                     Divider()
 
                     HStack {
-                        Text("添加时间")
+                        Text(lm.s.addedOn)
                             .foregroundStyle(.secondary)
                         Spacer()
                         Text(item.createdAt, style: .date)
@@ -94,19 +99,19 @@ struct ItemDetailView: View {
                     Button {
                         showingEdit = true
                     } label: {
-                        Label("编辑", systemImage: "pencil")
+                        Label(lm.s.edit, systemImage: "pencil")
                     }
 
                     Button {
                         showingMoveSheet = true
                     } label: {
-                        Label("移动到…", systemImage: "arrow.right.doc.on.clipboard")
+                        Label(lm.s.moveTo, systemImage: "arrow.right.doc.on.clipboard")
                     }
 
                     Button(role: .destructive) {
                         showingDeleteConfirm = true
                     } label: {
-                        Label("删除", systemImage: "trash")
+                        Label(lm.s.delete, systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -121,15 +126,15 @@ struct ItemDetailView: View {
         .sheet(isPresented: $showingMoveSheet) {
             MoveItemsView(items: [item])
         }
-        .alert("确认删除", isPresented: $showingDeleteConfirm) {
-            Button("删除", role: .destructive) {
+        .alert(lm.s.confirmDelete, isPresented: $showingDeleteConfirm) {
+            Button(lm.s.delete, role: .destructive) {
                 viewContext.delete(item)
                 try? viewContext.save()
                 dismiss()
             }
-            Button("取消", role: .cancel) {}
+            Button(lm.s.cancel, role: .cancel) {}
         } message: {
-            Text("确定要删除「\(item.name)」吗？此操作无法撤销。")
+            Text(lm.s.deleteItemConfirm(name: item.name))
         }
     }
 }

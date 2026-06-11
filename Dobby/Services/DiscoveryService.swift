@@ -55,10 +55,11 @@ enum MatchType: String, Decodable {
     case related
 
     var label: String {
+        let en = LanguageManager.shared.isEnglish
         switch self {
-        case .exact:      return "直接匹配"
-        case .substitute: return "替代品"
-        case .related:    return "相关"
+        case .exact:      return en ? "Exact Match" : "直接匹配"
+        case .substitute: return en ? "Substitute"  : "替代品"
+        case .related:    return en ? "Related"     : "相关"
         }
     }
 
@@ -79,7 +80,8 @@ enum DiscoveryService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(["query": query])
+        let language = LanguageManager.shared.language
+        request.httpBody = try JSONEncoder().encode(["query": query, "language": language])
 
         let (data, response) = try await URLSession.shared.data(for: request)
 

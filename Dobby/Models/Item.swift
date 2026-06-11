@@ -29,8 +29,9 @@ public class Item: NSManagedObject, Identifiable {
     }
 
     var locationDescription: String {
-        let cabinetName = cabinet?.name ?? "未分配"
-        let roomName = cabinet?.room?.name ?? "未分配"
+        let fallback = LanguageManager.shared.s.unassigned
+        let cabinetName = cabinet?.name ?? fallback
+        let roomName = cabinet?.room?.name ?? fallback
         return "\(roomName) · \(cabinetName)"
     }
 
@@ -65,11 +66,12 @@ enum ExpiryStatus {
     }
 
     var label: String {
+        let en = LanguageManager.shared.isEnglish
         switch self {
         case .none: return ""
-        case .ok: return "未过期"
-        case .expiringSoon: return "即将过期"
-        case .expired: return "已过期"
+        case .ok: return en ? "Not Expired" : "未过期"
+        case .expiringSoon: return en ? "Expiring Soon" : "即将过期"
+        case .expired: return en ? "Expired" : "已过期"
         }
     }
 }
@@ -85,6 +87,34 @@ enum ItemCategory: String, CaseIterable {
     case toys = "玩具"
     case books = "书籍"
     case other = "其他"
+
+    /// English display name — also used to match backend responses when language == "en"
+    var englishName: String {
+        switch self {
+        case .clothing:    return "Clothing"
+        case .food:        return "Food"
+        case .electronics: return "Electronics"
+        case .documents:   return "Documents"
+        case .tools:       return "Tools"
+        case .medicine:    return "Medicine"
+        case .kitchenware: return "Kitchenware"
+        case .toys:        return "Toys"
+        case .books:       return "Books"
+        case .other:       return "Other"
+        }
+    }
+
+    /// Returns the appropriate display name for the current app language.
+    /// rawValue (Chinese) is always used as the CoreData storage key — never changes.
+    var displayName: String {
+        LanguageManager.shared.isEnglish ? englishName : rawValue
+    }
+
+    /// Match against either Chinese rawValue or English name — handles both backend languages.
+    static func from(string: String?) -> ItemCategory? {
+        guard let string else { return nil }
+        return allCases.first { $0.rawValue == string || $0.englishName == string }
+    }
 
     var icon: String {
         switch self {

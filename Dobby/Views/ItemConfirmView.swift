@@ -5,6 +5,7 @@ import SwiftUI
 struct ItemConfirmView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var lm: LanguageManager
 
     let recognitionResult: ItemRecognitionResult
     let rooms: [Room]
@@ -38,27 +39,27 @@ struct ItemConfirmView: View {
         NavigationStack {
             Form {
                 // MARK: Basic Info
-                Section("物品信息") {
-                    TextField("物品名称", text: $name)
-                    Picker("分类", selection: $category) {
+                Section(lm.s.itemInfo) {
+                    TextField(lm.s.itemName, text: $name)
+                    Picker(lm.s.category, selection: $category) {
                         ForEach(ItemCategory.allCases, id: \.self) { cat in
-                            Label(cat.rawValue, systemImage: cat.icon).tag(cat)
+                            Label(cat.displayName, systemImage: cat.icon).tag(cat)
                         }
                     }
-                    Stepper("数量：\(quantity)", value: $quantity, in: 1...999)
+                    Stepper(lm.s.quantityStepperColon(n: quantity), value: $quantity, in: 1...999)
                 }
 
                 // MARK: Expiry
-                Section("保质期") {
-                    Toggle("设置保质期", isOn: $hasExpiryDate)
+                Section(lm.s.expiryLabel) {
+                    Toggle(lm.s.setExpiryToggle, isOn: $hasExpiryDate)
                     if hasExpiryDate {
-                        DatePicker("过期日期", selection: $expiryDate, displayedComponents: .date)
+                        DatePicker(lm.s.expiryDate, selection: $expiryDate, displayedComponents: .date)
                     }
                 }
 
                 // MARK: Notes
-                Section("备注") {
-                    TextField("备注（可选）", text: $notes, axis: .vertical)
+                Section(lm.s.notes) {
+                    TextField(lm.s.notesPlaceholder, text: $notes, axis: .vertical)
                         .lineLimit(3...6)
                 }
 
@@ -68,34 +69,34 @@ struct ItemConfirmView: View {
                         CabinetPickerView(rooms: rooms, selectedCabinet: $selectedCabinet)
                     } label: {
                         HStack {
-                            Text("存放位置")
+                            Text(lm.s.storageLocation)
                             Spacer()
                             if let cabinet = selectedCabinet {
                                 Text(cabinet.room.map { "\($0.name) · \(cabinet.name)" } ?? cabinet.name)
                                     .foregroundStyle(.secondary)
                             } else {
-                                Text("请选择")
+                                Text(lm.s.pleaseSelect)
                                     .foregroundStyle(isCabinetRequired ? .red : .secondary)
                             }
                         }
                     }
                 } header: {
-                    Text("存放位置")
+                    Text(lm.s.storageLocation)
                 } footer: {
                     if isCabinetRequired {
-                        Text("请选择存放位置后再保存")
+                        Text(lm.s.selectLocationFirst)
                             .foregroundStyle(.red)
                     }
                 }
             }
-            .navigationTitle("确认物品信息")
+            .navigationTitle(lm.s.confirmItem)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                    Button(lm.s.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") { saveItem() }
+                    Button(lm.s.save) { saveItem() }
                         .fontWeight(.semibold)
                 }
             }
@@ -158,6 +159,7 @@ struct CabinetPickerView: View {
     let rooms: [Room]
     @Binding var selectedCabinet: Cabinet?
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var lm: LanguageManager
 
     var body: some View {
         List {
@@ -182,17 +184,18 @@ struct CabinetPickerView: View {
                 }
             }
         }
-        .navigationTitle("选择柜子")
+        .navigationTitle(lm.s.selectCabinet)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #Preview {
     ItemConfirmView(
-        recognitionResult: ItemRecognitionResult(name: "牛奶", category: .food, quantity: 2),
+        recognitionResult: ItemRecognitionResult(name: "Milk", category: .food, quantity: 2),
         rooms: [],
         geminiService: MockGeminiService()
     )
     .environment(\.managedObjectContext,
         PersistenceController.preview.container.viewContext)
+    .environmentObject(LanguageManager.shared)
 }

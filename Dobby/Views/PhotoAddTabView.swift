@@ -1,10 +1,11 @@
 import SwiftUI
 import PhotosUI
 
-/// Root view for the "拍照添加" tab.
+/// Root view for the Smart Add tab.
 /// Lets the user choose between single-item and receipt mode, then capture a photo.
 struct PhotoAddTabView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject private var lm: LanguageManager
 
     @FetchRequest(
         sortDescriptors: [SortDescriptor(\.sortOrder)],
@@ -33,7 +34,7 @@ struct PhotoAddTabView: View {
         NavigationStack {
             VStack(spacing: 32) {
                 // Mode picker
-                Picker("模式", selection: $mode) {
+                Picker(lm.s.modePickerLabel, selection: $mode) {
                     ForEach(PhotoAddMode.allCases) { m in
                         Text(m.label).tag(m)
                     }
@@ -57,7 +58,7 @@ struct PhotoAddTabView: View {
                 Button {
                     showingCapture = true
                 } label: {
-                    Label("拍照 / 选择图片", systemImage: "camera.fill")
+                    Label(lm.s.takeOrSelectPhoto, systemImage: "camera.fill")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -69,14 +70,14 @@ struct PhotoAddTabView: View {
                 .disabled(isProcessing)
 
                 if isProcessing {
-                    ProgressView("AI 识别中…")
+                    ProgressView(lm.s.aiProcessing)
                         .padding()
                 }
 
                 Spacer()
             }
             .padding(.top, 24)
-            .navigationTitle("拍照添加")
+            .navigationTitle(lm.s.smartAdd)
             // Photo capture sheet — trigger recognition only after sheet is fully dismissed
             .sheet(isPresented: $showingCapture, onDismiss: {
                 if let data = capturedImageData {
@@ -105,10 +106,10 @@ struct PhotoAddTabView: View {
                     )
                 }
             }
-            .alert("识别失败", isPresented: $showingError) {
-                Button("好", role: .cancel) {}
+            .alert(lm.s.recognitionFailed, isPresented: $showingError) {
+                Button(lm.s.ok, role: .cancel) {}
             } message: {
-                Text(errorMessage ?? "未知错误，请重试")
+                Text(errorMessage ?? lm.s.unknownError)
             }
         }
     }
@@ -148,9 +149,10 @@ enum PhotoAddMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var label: String {
+        let lm = LanguageManager.shared
         switch self {
-        case .singleItem: return "单件物品"
-        case .receipt:    return "购物小票"
+        case .singleItem: return lm.s.singleItemMode
+        case .receipt:    return lm.s.receiptMode
         }
     }
 
@@ -162,9 +164,10 @@ enum PhotoAddMode: String, CaseIterable, Identifiable {
     }
 
     var description: String {
+        let lm = LanguageManager.shared
         switch self {
-        case .singleItem: return "拍摄单件物品，AI 自动识别名称、分类和保质期"
-        case .receipt:    return "拍摄购物小票，批量添加多件物品"
+        case .singleItem: return lm.s.singleItemDesc
+        case .receipt:    return lm.s.receiptDesc
         }
     }
 }
@@ -179,4 +182,5 @@ extension ItemRecognitionResult: Identifiable {
     PhotoAddTabView()
         .environment(\.managedObjectContext,
             PersistenceController.preview.container.viewContext)
+        .environmentObject(LanguageManager.shared)
 }

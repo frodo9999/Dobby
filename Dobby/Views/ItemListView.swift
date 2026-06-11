@@ -2,16 +2,29 @@ import SwiftUI
 import CoreData
 
 enum ItemSortOption: String, CaseIterable {
-    case dateDesc = "最新添加"
-    case dateAsc = "最早添加"
-    case nameAsc = "名称 A→Z"
-    case nameDesc = "名称 Z→A"
-    case expiryAsc = "过期日期（近→远）"
-    case quantityDesc = "数量（多→少）"
+    case dateDesc  = "dateDesc"
+    case dateAsc   = "dateAsc"
+    case nameAsc   = "nameAsc"
+    case nameDesc  = "nameDesc"
+    case expiryAsc = "expiryAsc"
+    case quantityDesc = "quantityDesc"
+
+    var displayName: String {
+        let s = LanguageManager.shared.s
+        switch self {
+        case .dateDesc:     return s.sortDateDesc
+        case .dateAsc:      return s.sortDateAsc
+        case .nameAsc:      return s.sortNameAsc
+        case .nameDesc:     return s.sortNameDesc
+        case .expiryAsc:    return s.sortExpiryAsc
+        case .quantityDesc: return s.sortQtyDesc
+        }
+    }
 }
 
 struct ItemListView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject private var lm: LanguageManager
     @ObservedObject var cabinet: Cabinet
     @State private var showingAddItem = false
     @State private var editMode: EditMode = .inactive
@@ -70,13 +83,13 @@ struct ItemListView: View {
             ToolbarItem(placement: .navigationBarLeading) {
                 if editMode == .inactive && !cabinet.itemsArray.isEmpty {
                     Menu {
-                        Section("排序") {
+                        Section(lm.s.sortSection) {
                             ForEach(ItemSortOption.allCases, id: \.self) { option in
                                 Button {
                                     sortOption = option
                                 } label: {
                                     HStack {
-                                        Text(option.rawValue)
+                                        Text(option.displayName)
                                         if sortOption == option {
                                             Image(systemName: "checkmark")
                                         }
@@ -86,12 +99,12 @@ struct ItemListView: View {
                         }
 
                         if !availableCategories.isEmpty {
-                            Section("按分类筛选") {
+                            Section(lm.s.filterSection) {
                                 Button {
                                     filterCategory = nil
                                 } label: {
                                     HStack {
-                                        Text("全部")
+                                        Text(lm.s.filterAll)
                                         if filterCategory == nil {
                                             Image(systemName: "checkmark")
                                         }
@@ -118,7 +131,7 @@ struct ItemListView: View {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if editMode == .active {
-                    Button("完成") {
+                    Button(lm.s.done) {
                         editMode = .inactive
                         selectedItems.removeAll()
                     }
@@ -146,7 +159,7 @@ struct ItemListView: View {
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "arrow.right.doc.on.clipboard")
-                            Text("移动")
+                            Text(lm.s.moveBatch)
                                 .font(.caption)
                         }
                         .frame(maxWidth: .infinity)
@@ -157,7 +170,7 @@ struct ItemListView: View {
                     } label: {
                         VStack(spacing: 4) {
                             Image(systemName: "trash")
-                            Text("删除")
+                            Text(lm.s.delete)
                                 .font(.caption)
                         }
                         .frame(maxWidth: .infinity)
@@ -180,20 +193,20 @@ struct ItemListView: View {
                 selectedItems.removeAll()
             }
         }
-        .alert("确认删除", isPresented: $showingBatchDeleteConfirm) {
-            Button("删除 \(selectedItems.count) 件", role: .destructive) {
+        .alert(lm.s.confirmDelete, isPresented: $showingBatchDeleteConfirm) {
+            Button(lm.s.deleteCountButton(count: selectedItems.count), role: .destructive) {
                 batchDelete()
             }
-            Button("取消", role: .cancel) {}
+            Button(lm.s.cancel, role: .cancel) {}
         } message: {
-            Text("确定要删除选中的 \(selectedItems.count) 件物品吗？此操作无法撤销。")
+            Text(lm.s.deleteCountConfirm(count: selectedItems.count))
         }
         .overlay {
             if cabinet.itemsArray.isEmpty {
                 ContentUnavailableView {
-                    Label("还没有物品", systemImage: "archivebox")
+                    Label(lm.s.noItems, systemImage: "archivebox")
                 } description: {
-                    Text("点击右上角 + 添加物品")
+                    Text(lm.s.addItemHint)
                 }
             }
         }
@@ -230,7 +243,7 @@ struct ItemRow: View {
                     .frame(width: 44, height: 44)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             } else {
-                let category = ItemCategory.allCases.first { $0.rawValue == item.category }
+                let category = ItemCategory.from(string: item.category)
                 Image(systemName: category?.icon ?? "archivebox")
                     .font(.title3)
                     .foregroundStyle(.green)
@@ -270,16 +283,17 @@ struct ExpiryBadge: View {
     let expiryDate: Date
     let status: ExpiryStatus
     let daysLeft: Int?
+    @EnvironmentObject private var lm: LanguageManager
 
     private var text: String {
         guard let days = daysLeft else { return "" }
         switch status {
         case .expired:
-            return "已过期 \(-days) 天"
+            return lm.s.expiryExpired(days: days)
         case .expiringSoon:
-            return days == 0 ? "今天过期" : "还剩 \(days) 天过期"
+            return days == 0 ? lm.s.expiryToday : lm.s.expiryDaysLeft(days: days)
         case .ok:
-            return "还剩 \(days) 天过期"
+            return lm.s.expiryDaysLeft(days: days)
         case .none:
             return ""
         }

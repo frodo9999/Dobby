@@ -3,6 +3,7 @@ import CoreData
 
 struct SearchView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject private var lm: LanguageManager
     @FetchRequest(sortDescriptors: []) private var allItems: FetchedResults<Item>
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Room.sortOrder, ascending: true)])
     private var allRooms: FetchedResults<Room>
@@ -32,7 +33,7 @@ struct SearchView: View {
     private var categoryStats: [(category: String, count: Int)] {
         var counts: [String: Int] = [:]
         for item in allItems {
-            let key = item.category.isEmpty ? "未分类" : item.category
+            let key = item.category.isEmpty ? lm.s.uncategorized : item.category
             counts[key, default: 0] += Int(item.quantity)
         }
         return counts.map { (category: $0.key, count: $0.value) }.sorted { $0.count > $1.count }
@@ -51,7 +52,7 @@ struct SearchView: View {
                 } else if filteredItems.isEmpty {
                     ContentUnavailableView.search(text: searchText)
                 } else {
-                    Section("搜索结果 (\(filteredItems.count))") {
+                    Section(lm.s.searchResults(n: filteredItems.count)) {
                         ForEach(filteredItems, id: \.objectID) { item in
                             NavigationLink(destination: ItemDetailView(item: item)) {
                                 SearchResultRow(item: item)
@@ -60,8 +61,8 @@ struct SearchView: View {
                     }
                 }
             }
-            .navigationTitle("搜索")
-            .searchable(text: $searchText, prompt: "搜索物品、柜子、房间...")
+            .navigationTitle(lm.s.searchTitle)
+            .searchable(text: $searchText, prompt: lm.s.searchPlaceholder)
             .toolbar { aiToolbarButton }
             .sheet(isPresented: $showingAIDiscovery) { AIDiscoveryView() }
         }
@@ -74,37 +75,37 @@ struct SearchView: View {
         Section {
             let cabinets = Set(allItems.compactMap { $0.cabinet })
             HStack {
-                StatCard(title: "房间", value: "\(allRooms.count)", icon: "house", color: .blue)
-                StatCard(title: "柜子", value: "\(cabinets.count)", icon: "cabinet", color: .orange)
-                StatCard(title: "物品", value: "\(allItems.count)", icon: "archivebox", color: .green)
+                StatCard(title: lm.s.statRooms, value: "\(allRooms.count)", icon: "house", color: .blue)
+                StatCard(title: lm.s.statCabinets, value: "\(cabinets.count)", icon: "cabinet", color: .orange)
+                StatCard(title: lm.s.statItems, value: "\(allItems.count)", icon: "archivebox", color: .green)
             }
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
         }
 
         if !expiredItems.isEmpty || !expiringSoonItems.isEmpty {
-            Section("过期提醒") {
+            Section(lm.s.expiryAlerts) {
                 if !expiredItems.isEmpty {
                     NavigationLink {
-                        ExpiryItemsListView(title: "已过期", items: expiredItems)
+                        ExpiryItemsListView(title: lm.s.expired, items: expiredItems)
                     } label: {
                         HStack {
                             Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.red)
-                            Text("已过期")
+                            Text(lm.s.expired)
                             Spacer()
-                            Text("\(expiredItems.count) 件").foregroundStyle(.red).bold()
+                            Text(lm.s.itemCount(n: expiredItems.count)).foregroundStyle(.red).bold()
                         }
                     }
                 }
                 if !expiringSoonItems.isEmpty {
                     NavigationLink {
-                        ExpiryItemsListView(title: "即将过期", items: expiringSoonItems)
+                        ExpiryItemsListView(title: lm.s.expiringSoon7, items: expiringSoonItems)
                     } label: {
                         HStack {
                             Image(systemName: "clock.badge.exclamationmark").foregroundStyle(.orange)
-                            Text("7天内过期")
+                            Text(lm.s.expiringSoon7)
                             Spacer()
-                            Text("\(expiringSoonItems.count) 件").foregroundStyle(.orange).bold()
+                            Text(lm.s.itemCount(n: expiringSoonItems.count)).foregroundStyle(.orange).bold()
                         }
                     }
                 }
@@ -112,13 +113,13 @@ struct SearchView: View {
         }
 
         if !roomStats.isEmpty {
-            Section("各房间物品") {
+            Section(lm.s.byRoom) {
                 ForEach(roomStats, id: \.room.objectID) { stat in
                     HStack(spacing: 12) {
                         Image(systemName: stat.room.icon).foregroundStyle(.blue).frame(width: 24)
                         Text(stat.room.name)
                         Spacer()
-                        Text("\(stat.itemCount) 件").foregroundStyle(.secondary)
+                        Text(lm.s.itemCount(n: stat.itemCount)).foregroundStyle(.secondary)
                         ProgressView(value: Double(stat.itemCount), total: Double(max(allItems.count, 1)))
                             .frame(width: 60)
                             .tint(.blue)
@@ -128,21 +129,21 @@ struct SearchView: View {
         }
 
         if !categoryStats.isEmpty {
-            Section("分类统计") {
+            Section(lm.s.byCategory) {
                 ForEach(categoryStats, id: \.category) { stat in
                     HStack {
-                        let cat = ItemCategory.allCases.first { $0.rawValue == stat.category }
+                        let cat = ItemCategory.from(string: stat.category)
                         Image(systemName: cat?.icon ?? "tag").foregroundStyle(.green).frame(width: 24)
                         Text(stat.category)
                         Spacer()
-                        Text("\(stat.count) 件").foregroundStyle(.secondary)
+                        Text(lm.s.itemCount(n: stat.count)).foregroundStyle(.secondary)
                     }
                 }
             }
         }
 
         if !allItems.isEmpty {
-            Section("最近添加") {
+            Section(lm.s.recentlyAdded) {
                 ForEach(allItems.sorted(by: { $0.createdAt > $1.createdAt }).prefix(10), id: \.objectID) { item in
                     NavigationLink(destination: ItemDetailView(item: item)) {
                         SearchResultRow(item: item)
@@ -157,7 +158,7 @@ struct SearchView: View {
         ToolbarItem(placement: .primaryAction) {
             Button { showingAIDiscovery = true } label: {
                 Image(systemName: "sparkles")
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(Color.purple)
             }
         }
     }
@@ -211,7 +212,7 @@ struct SearchResultRow: View {
                     .frame(width: 40, height: 40)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
             } else {
-                let category = ItemCategory.allCases.first { $0.rawValue == item.category }
+                let category = ItemCategory.from(string: item.category)
                 Image(systemName: category?.icon ?? "archivebox")
                     .frame(width: 40, height: 40)
                     .background(Color.green.opacity(0.1))
