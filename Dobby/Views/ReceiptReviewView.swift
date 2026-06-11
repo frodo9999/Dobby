@@ -160,7 +160,7 @@ struct ReceiptRowView: View {
                 .labelsHidden()
             }
 
-            // Row 2: Cabinet
+            // Row 2: Cabinet (buttonStyle .plain constrains tap area to label only)
             NavigationLink {
                 CabinetPickerView(rooms: rooms, selectedCabinet: $row.cabinet)
             } label: {
@@ -174,11 +174,16 @@ struct ReceiptRowView: View {
                         Text("请选择存放位置")
                             .foregroundStyle(.red)
                     }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(.tertiary)
+                        .font(.footnote)
                 }
                 .font(.subheadline)
             }
+            .buttonStyle(.plain)
 
-            // Row 3: Quantity counter "— N +" (right-aligned, styled)
+            // Row 3: Quantity counter "— N +" (right-aligned, pill with dividers)
             HStack {
                 Spacer()
                 HStack(spacing: 0) {
@@ -187,27 +192,34 @@ struct ReceiptRowView: View {
                     } label: {
                         Image(systemName: "minus")
                             .font(.system(size: 13, weight: .semibold))
-                            .frame(width: 36, height: 32)
-                            .foregroundStyle(.primary)
+                            .frame(width: 40, height: 32)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
 
+                    Divider().frame(height: 18)
+
                     Text("\(row.quantity)")
                         .font(.system(size: 15, weight: .semibold).monospacedDigit())
-                        .frame(minWidth: 36)
+                        .frame(minWidth: 40, idealHeight: 32)
                         .multilineTextAlignment(.center)
+
+                    Divider().frame(height: 18)
 
                     Button {
                         if row.quantity < 999 { row.quantity += 1 }
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 13, weight: .semibold))
-                            .frame(width: 36, height: 32)
-                            .foregroundStyle(.primary)
+                            .frame(width: 40, height: 32)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
-                .background(Color(.systemGray5))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color(.systemGray3), lineWidth: 1)
+                )
                 .clipShape(RoundedRectangle(cornerRadius: 10))
             }
 
