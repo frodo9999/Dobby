@@ -72,14 +72,26 @@ async def _call_gemini(prompt: str, image_bytes: bytes | None = None) -> str:
     return text.strip().removeprefix("```json").removesuffix("```").strip()
 
 
-async def extract_items_from_image(image_bytes: bytes, is_receipt: bool = False) -> list[ItemDraft]:
-    if is_receipt:
-        prompt = """You are a home inventory assistant. Analyze this supermarket receipt and extract all items.
+async def extract_items_from_image(image_bytes: bytes, is_receipt: bool = False, language: str = "en") -> list[ItemDraft]:
+    if language == "zh":
+        if is_receipt:
+            prompt = """你是一个家庭库存助手。请分析这张超市收据并提取所有商品。
+返回JSON数组：
+[{"name": "商品名称（中文）", "category": "食品|药品|衣物|电子产品|书籍|工具|厨具|玩具|文件|其他", "quantity": 数量, "expiryDate": "YYYY-MM-DD或null"}]
+只返回JSON，不要其他文字。"""
+        else:
+            prompt = """你是一个家庭库存助手。请分析这张照片并识别图中的物品。
+返回JSON数组：
+[{"name": "物品名称（中文）", "category": "食品|药品|衣物|电子产品|书籍|工具|厨具|玩具|文件|其他", "quantity": 数量, "expiryDate": "YYYY-MM-DD或null"}]
+只返回JSON，不要其他文字。"""
+    else:
+        if is_receipt:
+            prompt = """You are a home inventory assistant. Analyze this supermarket receipt and extract all items.
 Return a JSON array:
 [{"name": "item name", "category": "Food|Medicine|Clothing|Electronics|Books|Tools|Kitchenware|Toys|Documents|Other", "quantity": number, "expiryDate": "YYYY-MM-DD or null"}]
 Return only JSON, no other text."""
-    else:
-        prompt = """You are a home inventory assistant. Analyze this photo and identify the item(s) shown.
+        else:
+            prompt = """You are a home inventory assistant. Analyze this photo and identify the item(s) shown.
 Return a JSON array:
 [{"name": "item name", "category": "Food|Medicine|Clothing|Electronics|Books|Tools|Kitchenware|Toys|Documents|Other", "quantity": number, "expiryDate": "YYYY-MM-DD or null"}]
 Return only JSON, no other text."""

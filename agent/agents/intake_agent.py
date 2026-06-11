@@ -3,7 +3,7 @@ from services.mongo_service import get_all_cabinets, get_items_in_cabinet
 from services.gemini_service import ItemDraft, call_gemini_text
 
 
-async def plan_placement(items: list[ItemDraft]) -> list[dict]:
+async def plan_placement(items: list[ItemDraft], language: str = "en") -> list[dict]:
     """
     Multi-step reasoning agent:
     Step 1 — Fetch all cabinets from MongoDB
@@ -57,7 +57,32 @@ async def plan_placement(items: list[ItemDraft]) -> list[dict]:
             "quantity": item.quantity,
         } for item in gemini_bucket], ensure_ascii=False)
 
-        prompt = f"""You are a smart home inventory management assistant.
+        if language == "zh":
+            prompt = f"""你是一个智能家庭库存管理助手。
+
+以下是家中所有柜子的信息（JSON格式）：
+{cabinet_context}
+
+以下是需要存放的新物品（JSON格式）：
+{items_context}
+
+请为每件物品推荐最合适的柜子。规则：
+1. 选择contentSummary与物品类别和名称语义最相近的柜子
+2. 每件物品都必须分配到一个柜子
+
+返回JSON数组，每个元素包含：
+{{
+  "itemName": "物品名称",
+  "recommendedCabinetId": "柜子id",
+  "cabinetName": "柜子名称",
+  "roomName": "房间名称",
+  "reason": "一句话说明推荐原因（中文）",
+  "confidence": 0.0到1.0的置信度分数
+}}
+
+只返回JSON数组，不要其他文字，不要markdown代码块。"""
+        else:
+            prompt = f"""You are a smart home inventory management assistant.
 
 Below is information about all cabinets in the home (JSON format):
 {cabinet_context}
@@ -99,7 +124,7 @@ Return only the JSON array, no other text, no markdown code blocks."""
                 "recommendedCabinetId": cabinet["_id"],
                 "cabinetName": cabinet["name"],
                 "roomName": cabinet.get("room_name", ""),
-                "reason": "This cabinet already contains the same item.",
+                "reason": "该柜子里已有相同物品。" if language == "zh" else "This cabinet already contains the same item.",
                 "confidence": 1.0,
             })
         elif item.name in gemini_map:
@@ -112,7 +137,7 @@ Return only the JSON array, no other text, no markdown code blocks."""
                 "recommendedCabinetId": fallback["_id"],
                 "cabinetName": fallback["name"],
                 "roomName": fallback.get("room_name", ""),
-                "reason": "Could not determine best location; assigned to default cabinet.",
+                "reason": "未能确定最佳位置，已分配到默认柜子。" if language == "zh" else "Could not determine best location; assigned to default cabinet.",
                 "confidence": 0.1,
             })
 

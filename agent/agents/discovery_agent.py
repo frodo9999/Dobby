@@ -25,7 +25,7 @@ def _format_candidates(raw_items: list[dict]) -> list[dict]:
     return result
 
 
-async def discover(query: str) -> dict:
+async def discover(query: str, language: str = "en") -> dict:
     """
     Multi-step reasoning agent:
     Step 1 — Validate query
@@ -53,16 +53,53 @@ async def discover(query: str) -> dict:
         return {
             "query": query,
             "found": False,
-            "summary": "No matching items found in your inventory.",
+            "summary": "家中没有找到相关物品。" if language == "zh" else "No matching items found in your inventory.",
             "items": [],
-            "suggestion": "Consider adding items to your inventory.",
+            "suggestion": "可以考虑添加物品到您的库存。" if language == "zh" else "Consider adding items to your inventory.",
         }
 
     # Step 5: Build Gemini prompt
     candidates = _format_candidates(search_results)
     candidates_json = json.dumps(candidates, ensure_ascii=False)
 
-    prompt = f"""You are a smart home inventory assistant.
+    if language == "zh":
+        prompt = f"""你是一个智能家庭库存助手。
+
+用户的问题是："{query}"
+
+以下是家庭库存中的候选物品（JSON格式，包含名称、类别、数量、位置和保质期）：
+{candidates_json}
+
+根据用户的问题，从上方列表中找出相关物品。你必须：
+1. 理解用户的意图（例如"有什么吃的？"= 寻找食品；"有什么喝的？"= 寻找饮料）
+2. 找出完全匹配（exact）、替代品（substitute）或满足用户需求的相关物品（related）
+3. 对于保质期查询（例如"快过期的"），使用expiryDate字段判断相关性
+4. 忽略与用户需求无关的物品
+5. 不要编造候选列表中没有的物品
+6. 直接使用候选列表中的location值，不要修改
+7. 用中文回答，物品名称保持原样
+
+返回以下格式的JSON：
+{{
+  "query": "用户的问题",
+  "found": true或false,
+  "summary": "一句话中文回答",
+  "items": [
+    {{
+      "name": "物品名称",
+      "category": "类别",
+      "quantity": 数量,
+      "location": "直接使用候选列表中的location值",
+      "matchType": "exact或substitute或related",
+      "reason": "推荐该物品的原因（中文）"
+    }}
+  ],
+  "suggestion": "如果没有找到，建议添加什么物品（如果找到了则省略此字段）"
+}}
+
+只返回JSON，不要其他文字，不要markdown代码块。"""
+    else:
+        prompt = f"""You are a smart home inventory assistant.
 
 The user's question is: "{query}"
 

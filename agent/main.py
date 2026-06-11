@@ -77,11 +77,12 @@ def seed():
 async def intake_extract(
     file: UploadFile = File(...),
     is_receipt: bool = False,
+    language: str = "en",
 ):
     """Step 1: Extract item drafts from a photo or receipt using Gemini Vision."""
     image_bytes = await file.read()
     try:
-        items = await extract_items_from_image(image_bytes, is_receipt=is_receipt)
+        items = await extract_items_from_image(image_bytes, is_receipt=is_receipt, language=language)
         if not items:
             raise HTTPException(status_code=422, detail="Could not extract items from image")
         return {"items": [item.model_dump() for item in items]}
@@ -96,6 +97,7 @@ async def intake_plan(payload: dict):
     """Step 2: Agent reasons over MongoDB inventory to produce a placement plan."""
     from services.gemini_service import ItemDraft
     raw_items = payload.get("items", [])
+    language = payload.get("language", "en")
     items = [ItemDraft(**i) for i in raw_items]
 
     # Empty list is valid — return empty plan
@@ -103,7 +105,7 @@ async def intake_plan(payload: dict):
         return {"plan": []}
 
     try:
-        plan = await plan_placement(items)
+        plan = await plan_placement(items, language=language)
         return {"plan": plan}
     except ValueError as e:
         msg = str(e)
@@ -155,6 +157,7 @@ async def intake_confirm(payload: dict):
 
 class DiscoveryRequest(BaseModel):
     query: str
+    language: str = "en"
 
 
 @app.post("/discovery")
@@ -163,7 +166,7 @@ async def inventory_discovery(request: DiscoveryRequest):
     if not request.query or not request.query.strip():
         raise HTTPException(status_code=422, detail="Query must not be empty")
     try:
-        result = await discover(request.query)
+        result = await discover(request.query, language=request.language)
         return result
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
