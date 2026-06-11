@@ -152,8 +152,8 @@ struct ReceiptRowView: View {
                         Text(cat.rawValue).tag(cat)
                     }
                 }
+                .pickerStyle(.menu)
                 .labelsHidden()
-                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Stepper("×\(row.quantity)", value: $row.quantity, in: 1...999)
                     .labelsHidden()
