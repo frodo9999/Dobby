@@ -114,7 +114,7 @@ struct AIDiscoveryView: View {
                         Task { await search() }
                     } label: {
                         Image(systemName: "arrow.up.circle.fill")
-                            .foregroundStyle(query.trimmingCharacters(in: .whitespaces).isEmpty ? .secondary : .purple)
+                            .foregroundStyle(query.trimmingCharacters(in: .whitespaces).isEmpty ? Color.secondary : Color.purple)
                     }
                     .disabled(query.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
                 }
