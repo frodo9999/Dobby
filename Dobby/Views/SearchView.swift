@@ -47,97 +47,7 @@ struct SearchView: View {
         NavigationStack {
             List {
                 if searchText.isEmpty {
-                    Section {
-                        let cabinets = Set(allItems.compactMap { $0.cabinet })
-                        HStack {
-                            StatCard(title: "房间", value: "\(allRooms.count)", icon: "house", color: .blue)
-                            StatCard(title: "柜子", value: "\(cabinets.count)", icon: "cabinet", color: .orange)
-                            StatCard(title: "物品", value: "\(allItems.count)", icon: "archivebox", color: .green)
-                        }
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                    }
-
-                    if !expiredItems.isEmpty || !expiringSoonItems.isEmpty {
-                        Section("过期提醒") {
-                            if !expiredItems.isEmpty {
-                                NavigationLink {
-                                    ExpiryItemsListView(title: "已过期", items: expiredItems)
-                                } label: {
-                                    HStack {
-                                        Image(systemName: "exclamationmark.circle.fill")
-                                            .foregroundStyle(.red)
-                                        Text("已过期")
-                                        Spacer()
-                                        Text("\(expiredItems.count) 件")
-                                            .foregroundStyle(.red)
-                                            .bold()
-                                    }
-                                }
-                            }
-                            if !expiringSoonItems.isEmpty {
-                                NavigationLink {
-                                    ExpiryItemsListView(title: "即将过期", items: expiringSoonItems)
-                                } label: {
-                                    HStack {
-                                        Image(systemName: "clock.badge.exclamationmark")
-                                            .foregroundStyle(.orange)
-                                        Text("7天内过期")
-                                        Spacer()
-                                        Text("\(expiringSoonItems.count) 件")
-                                            .foregroundStyle(.orange)
-                                            .bold()
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if !roomStats.isEmpty {
-                        Section("各房间物品") {
-                            ForEach(roomStats, id: \.room.objectID) { stat in
-                                HStack(spacing: 12) {
-                                    Image(systemName: stat.room.icon)
-                                        .foregroundStyle(.blue)
-                                        .frame(width: 24)
-                                    Text(stat.room.name)
-                                    Spacer()
-                                    Text("\(stat.itemCount) 件")
-                                        .foregroundStyle(.secondary)
-                                    ProgressView(value: Double(stat.itemCount), total: Double(max(allItems.count, 1)))
-                                        .frame(width: 60)
-                                        .tint(.blue)
-                                }
-                            }
-                        }
-                    }
-
-                    if !categoryStats.isEmpty {
-                        Section("分类统计") {
-                            ForEach(categoryStats, id: \.category) { stat in
-                                HStack {
-                                    let cat = ItemCategory.allCases.first { $0.rawValue == stat.category }
-                                    Image(systemName: cat?.icon ?? "tag")
-                                        .foregroundStyle(.green)
-                                        .frame(width: 24)
-                                    Text(stat.category)
-                                    Spacer()
-                                    Text("\(stat.count) 件")
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-
-                    if !allItems.isEmpty {
-                        Section("最近添加") {
-                            ForEach(allItems.sorted(by: { $0.createdAt > $1.createdAt }).prefix(10), id: \.objectID) { item in
-                                NavigationLink(destination: ItemDetailView(item: item)) {
-                                    SearchResultRow(item: item)
-                                }
-                            }
-                        }
-                    }
+                    emptyStateSections
                 } else if filteredItems.isEmpty {
                     ContentUnavailableView.search(text: searchText)
                 } else {
@@ -152,18 +62,102 @@ struct SearchView: View {
             }
             .navigationTitle("搜索")
             .searchable(text: $searchText, prompt: "搜索物品、柜子、房间...")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingAIDiscovery = true
+            .toolbar { aiToolbarButton }
+            .sheet(isPresented: $showingAIDiscovery) { AIDiscoveryView() }
+        }
+    }
+
+    // MARK: - Subviews
+
+    @ViewBuilder
+    private var emptyStateSections: some View {
+        Section {
+            let cabinets = Set(allItems.compactMap { $0.cabinet })
+            HStack {
+                StatCard(title: "房间", value: "\(allRooms.count)", icon: "house", color: .blue)
+                StatCard(title: "柜子", value: "\(cabinets.count)", icon: "cabinet", color: .orange)
+                StatCard(title: "物品", value: "\(allItems.count)", icon: "archivebox", color: .green)
+            }
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+        }
+
+        if !expiredItems.isEmpty || !expiringSoonItems.isEmpty {
+            Section("过期提醒") {
+                if !expiredItems.isEmpty {
+                    NavigationLink {
+                        ExpiryItemsListView(title: "已过期", items: expiredItems)
                     } label: {
-                        Image(systemName: "sparkles")
-                            .foregroundStyle(.purple)
+                        HStack {
+                            Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.red)
+                            Text("已过期")
+                            Spacer()
+                            Text("\(expiredItems.count) 件").foregroundStyle(.red).bold()
+                        }
+                    }
+                }
+                if !expiringSoonItems.isEmpty {
+                    NavigationLink {
+                        ExpiryItemsListView(title: "即将过期", items: expiringSoonItems)
+                    } label: {
+                        HStack {
+                            Image(systemName: "clock.badge.exclamationmark").foregroundStyle(.orange)
+                            Text("7天内过期")
+                            Spacer()
+                            Text("\(expiringSoonItems.count) 件").foregroundStyle(.orange).bold()
+                        }
                     }
                 }
             }
-            .sheet(isPresented: $showingAIDiscovery) {
-                AIDiscoveryView()
+        }
+
+        if !roomStats.isEmpty {
+            Section("各房间物品") {
+                ForEach(roomStats, id: \.room.objectID) { stat in
+                    HStack(spacing: 12) {
+                        Image(systemName: stat.room.icon).foregroundStyle(.blue).frame(width: 24)
+                        Text(stat.room.name)
+                        Spacer()
+                        Text("\(stat.itemCount) 件").foregroundStyle(.secondary)
+                        ProgressView(value: Double(stat.itemCount), total: Double(max(allItems.count, 1)))
+                            .frame(width: 60)
+                            .tint(.blue)
+                    }
+                }
+            }
+        }
+
+        if !categoryStats.isEmpty {
+            Section("分类统计") {
+                ForEach(categoryStats, id: \.category) { stat in
+                    HStack {
+                        let cat = ItemCategory.allCases.first { $0.rawValue == stat.category }
+                        Image(systemName: cat?.icon ?? "tag").foregroundStyle(.green).frame(width: 24)
+                        Text(stat.category)
+                        Spacer()
+                        Text("\(stat.count) 件").foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+
+        if !allItems.isEmpty {
+            Section("最近添加") {
+                ForEach(allItems.sorted(by: { $0.createdAt > $1.createdAt }).prefix(10), id: \.objectID) { item in
+                    NavigationLink(destination: ItemDetailView(item: item)) {
+                        SearchResultRow(item: item)
+                    }
+                }
+            }
+        }
+    }
+
+    @ToolbarContentBuilder
+    private var aiToolbarButton: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
+            Button { showingAIDiscovery = true } label: {
+                Image(systemName: "sparkles")
+                    .foregroundStyle(.purple)
             }
         }
     }
@@ -190,11 +184,8 @@ struct ExpiryItemsListView: View {
                 NavigationLink(destination: ItemDetailView(item: item)) {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(item.name)
-                                .font(.headline)
-                            Text(item.locationDescription)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            Text(item.name).font(.headline)
+                            Text(item.locationDescription).font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
                         if let expiryDate = item.expiryDate {
@@ -228,19 +219,14 @@ struct SearchResultRow: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.name)
-                    .font(.body)
-                Text(item.locationDescription)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(item.name).font(.body)
+                Text(item.locationDescription).font(.caption).foregroundStyle(.secondary)
             }
 
             Spacer()
 
             if item.quantity > 1 {
-                Text("×\(item.quantity)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text("×\(item.quantity)").font(.caption).foregroundStyle(.secondary)
             }
         }
     }
@@ -254,15 +240,9 @@ struct StatCard: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundStyle(color)
-            Text(value)
-                .font(.title2)
-                .bold()
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Image(systemName: icon).font(.title2).foregroundStyle(color)
+            Text(value).font(.title2).bold()
+            Text(title).font(.caption).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)

@@ -13,6 +13,8 @@
 		7E9F8B512FD6386900BB6AC0 /* ReceiptReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B4D2FD6386900BB6AC0 /* ReceiptReviewView.swift */; };
 		7E9F8B542FD638C400BB6AC0 /* CabinetInferenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B522FD638C400BB6AC0 /* CabinetInferenceService.swift */; };
 		7E9F8B552FD638C400BB6AC0 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B532FD638C400BB6AC0 /* GeminiService.swift */; };
+		7E9F8B672FDA67AD00BB6AC0 /* AIDiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B662FDA67AD00BB6AC0 /* AIDiscoveryView.swift */; };
+		7E9F8B692FDA67C600BB6AC0 /* DiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B682FDA67C600BB6AC0 /* DiscoveryService.swift */; };
 		A1B2C3D400000001 /* DobbyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000101 /* DobbyApp.swift */; };
 		A1B2C3D400000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000102 /* ContentView.swift */; };
 		A1B2C3D400000003 /* Room.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000103 /* Room.swift */; };
@@ -54,6 +56,8 @@
 		7E9F8B4D2FD6386900BB6AC0 /* ReceiptReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceiptReviewView.swift; sourceTree = "<group>"; };
 		7E9F8B522FD638C400BB6AC0 /* CabinetInferenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CabinetInferenceService.swift; sourceTree = "<group>"; };
 		7E9F8B532FD638C400BB6AC0 /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
+		7E9F8B662FDA67AD00BB6AC0 /* AIDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDiscoveryView.swift; sourceTree = "<group>"; };
+		7E9F8B682FDA67C600BB6AC0 /* DiscoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryService.swift; sourceTree = "<group>"; };
 		7EC4F9C62F8494F000EC8DD9 /* Dobby.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dobby.entitlements; sourceTree = "<group>"; };
 		7EC4F9C72F84951200EC8DD9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A1B2C3D400000101 /* DobbyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DobbyApp.swift; sourceTree = "<group>"; };
@@ -141,6 +145,7 @@
 		A1B2C3D400000304 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7E9F8B662FDA67AD00BB6AC0 /* AIDiscoveryView.swift */,
 				7E9F8B4A2FD6386900BB6AC0 /* ItemConfirmView.swift */,
 				7E9F8B4B2FD6386900BB6AC0 /* PhotoAddTabView.swift */,
 				7E9F8B4C2FD6386900BB6AC0 /* PhotoCaptureView.swift */,
@@ -171,6 +176,7 @@
 		A1B2C3D400000306 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				7E9F8B682FDA67C600BB6AC0 /* DiscoveryService.swift */,
 				7E9F8B522FD638C400BB6AC0 /* CabinetInferenceService.swift */,
 				7E9F8B532FD638C400BB6AC0 /* GeminiService.swift */,
 				A1B2C3D400000113 /* CSVService.swift */,
@@ -307,7 +313,9 @@
 				A1B2C3D40000000C /* ItemDetailView.swift in Sources */,
 				A1B2C3D40000000D /* CameraView.swift in Sources */,
 				A1B2C3D40000000E /* SearchView.swift in Sources */,
+				7E9F8B672FDA67AD00BB6AC0 /* AIDiscoveryView.swift in Sources */,
 				A1B2C3D400000010 /* NotificationManager.swift in Sources */,
+				7E9F8B692FDA67C600BB6AC0 /* DiscoveryService.swift in Sources */,
 				A1B2C3D400000011 /* MoveItemsView.swift in Sources */,
 				A1B2C3D400000012 /* CSVService.swift in Sources */,
 				A1B2C3D400000030 /* CloudSharingController.swift in Sources */,
@@ -505,7 +513,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C49L8788KT;
 				ENABLE_PREVIEWS = YES;
-
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Dobby/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机拍摄物品照片";
@@ -543,7 +550,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C49L8788KT;
 				ENABLE_PREVIEWS = YES;
-
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Dobby/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "需要使用相机拍摄物品照片";

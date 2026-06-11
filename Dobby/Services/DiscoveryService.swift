@@ -69,7 +69,7 @@ enum MatchType: String, Decodable {
         case .direct:     return .green
         case .intent:     return .blue
         case .substitute: return .orange
-        case .location:   return .purple
+        case .location:   return Color.purple
         case .expiry:     return .red
         }
     }

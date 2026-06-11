@@ -21,7 +21,7 @@ struct AIDiscoveryView: View {
                     // Query input
                     HStack(spacing: 10) {
                         Image(systemName: "sparkle.magnifyingglass")
-                            .foregroundStyle(.purple)
+                            .foregroundStyle(Color.purple)
                         TextField("问问 AI，例如：有牛奶吗", text: $query)
                             .focused($queryFieldFocused)
                             .submitLabel(.search)
@@ -55,7 +55,7 @@ struct AIDiscoveryView: View {
                                             .padding(.horizontal, 12)
                                             .padding(.vertical, 6)
                                             .background(Color.purple.opacity(0.12))
-                                            .foregroundStyle(.purple)
+                                            .foregroundStyle(Color.purple)
                                             .clipShape(Capsule())
                                     }
                                     .buttonStyle(.plain)
@@ -173,7 +173,7 @@ private struct DiscoveryResultView: View {
                                 .frame(width: 32, height: 32)
                                 .background(Color.purple.opacity(0.1))
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .foregroundStyle(.purple)
+                                .foregroundStyle(Color.purple)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.name)
