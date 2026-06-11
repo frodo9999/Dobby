@@ -34,7 +34,7 @@ struct ItemDetailView: View {
                                 .foregroundStyle(.secondary)
                             Spacer()
                             let category = ItemCategory.from(string: item.category)
-                            Label(item.category, systemImage: category?.icon ?? "tag")
+                            Label(category?.displayName ?? item.category, systemImage: category?.icon ?? "tag")
                         }
                     }
 
@@ -128,6 +128,7 @@ struct ItemDetailView: View {
         }
         .alert(lm.s.confirmDelete, isPresented: $showingDeleteConfirm) {
             Button(lm.s.delete, role: .destructive) {
+                MongoSyncService.deleteItem(item)
                 viewContext.delete(item)
                 try? viewContext.save()
                 dismiss()

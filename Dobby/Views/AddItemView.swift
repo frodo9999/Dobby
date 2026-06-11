@@ -130,6 +130,7 @@ struct AddItemView: View {
     private func saveItem() {
         let expiry = hasExpiryDate ? expiryDate : nil
         if let item = existingItem {
+            let oldName = item.name
             item.name = name
             item.category = category
             item.quantity = Int64(quantity)
@@ -137,8 +138,10 @@ struct AddItemView: View {
             item.photoData = photoData
             item.expiryDate = expiry
             item.updatedAt = Date()
+            item.cabinet?.rebuildContentSummary() // cabinet is optional on Item
             try? viewContext.save()
             scheduleNotification(for: name, id: item.objectID.uriRepresentation().absoluteString, expiry: expiry)
+            MongoSyncService.upsertItem(item, oldName: oldName != name ? oldName : nil)
         } else {
             let item = Item(context: viewContext)
             item.name = name
@@ -148,8 +151,10 @@ struct AddItemView: View {
             item.photoData = photoData
             item.expiryDate = expiry
             item.cabinet = cabinet
+            cabinet.rebuildContentSummary()
             try? viewContext.save()
             scheduleNotification(for: name, id: item.objectID.uriRepresentation().absoluteString, expiry: expiry)
+            MongoSyncService.upsertItem(item)
         }
     }
 

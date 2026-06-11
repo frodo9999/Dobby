@@ -115,7 +115,7 @@ struct ItemListView: View {
                                         filterCategory = category
                                     } label: {
                                         HStack {
-                                            Text(category)
+                                            Text(ItemCategory.from(string: category)?.displayName ?? category)
                                             if filterCategory == category {
                                                 Image(systemName: "checkmark")
                                             }
@@ -216,6 +216,7 @@ struct ItemListView: View {
         let sorted = sortedItems
         for index in offsets {
             let item = sorted[index]
+            MongoSyncService.deleteItem(item)
             viewContext.delete(item)
         }
         try? viewContext.save()
@@ -223,6 +224,7 @@ struct ItemListView: View {
 
     private func batchDelete() {
         for item in selectedItemObjects {
+            MongoSyncService.deleteItem(item)
             viewContext.delete(item)
         }
         try? viewContext.save()
@@ -257,7 +259,7 @@ struct ItemRow: View {
                     .font(.headline)
                 HStack(spacing: 6) {
                     if !item.category.isEmpty {
-                        Text(item.category)
+                        Text(ItemCategory.from(string: item.category)?.displayName ?? item.category)
                             .font(.caption)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)

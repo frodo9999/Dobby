@@ -15,6 +15,8 @@
 		7E9F8B552FD638C400BB6AC0 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B532FD638C400BB6AC0 /* GeminiService.swift */; };
 		7E9F8B672FDA67AD00BB6AC0 /* AIDiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B662FDA67AD00BB6AC0 /* AIDiscoveryView.swift */; };
 		7E9F8B692FDA67C600BB6AC0 /* DiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B682FDA67C600BB6AC0 /* DiscoveryService.swift */; };
+		7E9F8B6B2FDA91B600BB6AC0 /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B6A2FDA91B600BB6AC0 /* LanguageManager.swift */; };
+		7E9F8B6D2FDB352900BB6AC0 /* MongoSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F8B6C2FDB352900BB6AC0 /* MongoSyncService.swift */; };
 		A1B2C3D400000001 /* DobbyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000101 /* DobbyApp.swift */; };
 		A1B2C3D400000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000102 /* ContentView.swift */; };
 		A1B2C3D400000003 /* Room.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000103 /* Room.swift */; };
@@ -58,6 +60,8 @@
 		7E9F8B532FD638C400BB6AC0 /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
 		7E9F8B662FDA67AD00BB6AC0 /* AIDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIDiscoveryView.swift; sourceTree = "<group>"; };
 		7E9F8B682FDA67C600BB6AC0 /* DiscoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryService.swift; sourceTree = "<group>"; };
+		7E9F8B6A2FDA91B600BB6AC0 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
+		7E9F8B6C2FDB352900BB6AC0 /* MongoSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MongoSyncService.swift; sourceTree = "<group>"; };
 		7EC4F9C62F8494F000EC8DD9 /* Dobby.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dobby.entitlements; sourceTree = "<group>"; };
 		7EC4F9C72F84951200EC8DD9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A1B2C3D400000101 /* DobbyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DobbyApp.swift; sourceTree = "<group>"; };
@@ -118,6 +122,7 @@
 		A1B2C3D400000302 /* Dobby */ = {
 			isa = PBXGroup;
 			children = (
+				7E9F8B6A2FDA91B600BB6AC0 /* LanguageManager.swift */,
 				7EC4F9C72F84951200EC8DD9 /* Info.plist */,
 				7EC4F9C62F8494F000EC8DD9 /* Dobby.entitlements */,
 				A1B2C3D400000101 /* DobbyApp.swift */,
@@ -176,6 +181,7 @@
 		A1B2C3D400000306 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				7E9F8B6C2FDB352900BB6AC0 /* MongoSyncService.swift */,
 				7E9F8B682FDA67C600BB6AC0 /* DiscoveryService.swift */,
 				7E9F8B522FD638C400BB6AC0 /* CabinetInferenceService.swift */,
 				7E9F8B532FD638C400BB6AC0 /* GeminiService.swift */,
@@ -298,6 +304,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				7E9F8B542FD638C400BB6AC0 /* CabinetInferenceService.swift in Sources */,
+				7E9F8B6D2FDB352900BB6AC0 /* MongoSyncService.swift in Sources */,
+				7E9F8B6B2FDA91B600BB6AC0 /* LanguageManager.swift in Sources */,
 				7E9F8B552FD638C400BB6AC0 /* GeminiService.swift in Sources */,
 				A1B2C3D400000001 /* DobbyApp.swift in Sources */,
 				A1B2C3D400000002 /* ContentView.swift in Sources */,

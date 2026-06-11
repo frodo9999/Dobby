@@ -7,6 +7,8 @@ struct SearchView: View {
     @FetchRequest(sortDescriptors: []) private var allItems: FetchedResults<Item>
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Room.sortOrder, ascending: true)])
     private var allRooms: FetchedResults<Room>
+    @FetchRequest(sortDescriptors: [])
+    private var allCabinets: FetchedResults<Cabinet>
     @State private var searchText = ""
     @State private var showingAIDiscovery = false
 
@@ -73,10 +75,9 @@ struct SearchView: View {
     @ViewBuilder
     private var emptyStateSections: some View {
         Section {
-            let cabinets = Set(allItems.compactMap { $0.cabinet })
             HStack {
                 StatCard(title: lm.s.statRooms, value: "\(allRooms.count)", icon: "house", color: .blue)
-                StatCard(title: lm.s.statCabinets, value: "\(cabinets.count)", icon: "cabinet", color: .orange)
+                StatCard(title: lm.s.statCabinets, value: "\(allCabinets.count)", icon: "cabinet", color: .orange)
                 StatCard(title: lm.s.statItems, value: "\(allItems.count)", icon: "archivebox", color: .green)
             }
             .listRowInsets(EdgeInsets())
@@ -134,7 +135,7 @@ struct SearchView: View {
                     HStack {
                         let cat = ItemCategory.from(string: stat.category)
                         Image(systemName: cat?.icon ?? "tag").foregroundStyle(.green).frame(width: 24)
-                        Text(stat.category)
+                        Text(cat?.displayName ?? stat.category)
                         Spacer()
                         Text(lm.s.itemCount(n: stat.count)).foregroundStyle(.secondary)
                     }

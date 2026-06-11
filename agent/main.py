@@ -147,8 +147,124 @@ async def intake_confirm(payload: dict):
             room = db.rooms.find_one({"_id": cab.get("room_id")})
             item["room_name"] = room["name"] if room else ""
 
+    reset_index()
     sync_from_mongo(all_items)
     return {"status": "saved", "count": count}
+
+
+# ---------------------------------------------------------------------------
+# Manual Sync (iOS manual add / edit / delete)
+# ---------------------------------------------------------------------------
+
+class SyncItemRequest(BaseModel):
+    name: str
+    category: str = ""
+    quantity: int = 1
+    notes: str = ""
+    expiryDate: str = ""       # ISO date string "YYYY-MM-DD" or ""
+    cabinetName: str = ""
+    roomName: str = ""
+    oldName: str = ""          # for edits: the original name before rename
+
+
+@app.post("/items/sync")
+async def sync_item(req: SyncItemRequest):
+    """Upsert a single item from iOS manual add/edit. Looks up cabinet by name+room."""
+    from services.mongo_service import get_db
+    from services.elastic_service import sync_from_mongo
+    from bson import ObjectId
+
+    db = get_db()
+
+    # Find cabinet by name + room name
+    room = db.rooms.find_one({"name": req.roomName})
+    if not room:
+        raise HTTPException(status_code=404, detail=f"Room not found: {req.roomName}")
+    cabinet = db.cabinets.find_one({"name": req.cabinetName, "room_id": room["_id"]})
+    if not cabinet:
+        raise HTTPException(status_code=404, detail=f"Cabinet not found: {req.cabinetName}")
+
+    doc = {
+        "name": req.name,
+        "category": req.category,
+        "quantity": req.quantity,
+        "notes": req.notes,
+        "cabinet_id": cabinet["_id"],
+    }
+    if req.expiryDate:
+        doc["expiryDate"] = req.expiryDate
+
+    # Use oldName for edit lookups (rename case), otherwise use current name
+    import re
+    lookup_name = req.oldName if req.oldName else req.name
+    existing = db.items.find_one({
+        "name": {"$regex": f"^{re.escape(lookup_name)}$", "$options": "i"},
+        "cabinet_id": cabinet["_id"]
+    })
+
+    if existing:
+        db.items.update_one({"_id": existing["_id"]}, {"$set": doc})
+    else:
+        db.items.insert_one(doc)
+
+    # Re-sync Elasticsearch
+    all_items = list(db.items.find({}))
+    for item in all_items:
+        item["_id"] = str(item["_id"])
+        cab_id = item.get("cabinet_id")
+        cab = db.cabinets.find_one({"_id": ObjectId(cab_id) if isinstance(cab_id, str) else cab_id})
+        if cab:
+            item["cabinet_name"] = cab.get("name", "")
+            item["cabinet_id"] = str(cab["_id"])
+            room_doc = db.rooms.find_one({"_id": cab.get("room_id")})
+            item["room_name"] = room_doc["name"] if room_doc else ""
+    reset_index()
+    sync_from_mongo(all_items)
+    return {"status": "synced", "item": req.name}
+
+
+class DeleteItemRequest(BaseModel):
+    name: str
+    cabinetName: str
+    roomName: str
+
+
+@app.delete("/items/sync")
+async def delete_item(req: DeleteItemRequest):
+    """Delete a single item from iOS manual delete."""
+    from services.mongo_service import get_db
+    from services.elastic_service import sync_from_mongo
+    from bson import ObjectId
+
+    db = get_db()
+
+    room = db.rooms.find_one({"name": req.roomName})
+    if not room:
+        raise HTTPException(status_code=404, detail=f"Room not found: {req.roomName}")
+    cabinet = db.cabinets.find_one({"name": req.cabinetName, "room_id": room["_id"]})
+    if not cabinet:
+        raise HTTPException(status_code=404, detail=f"Cabinet not found: {req.cabinetName}")
+
+    import re
+    db.items.delete_one({
+        "name": {"$regex": f"^{re.escape(req.name)}$", "$options": "i"},
+        "cabinet_id": cabinet["_id"]
+    })
+
+    # Re-sync Elasticsearch
+    all_items = list(db.items.find({}))
+    for item in all_items:
+        item["_id"] = str(item["_id"])
+        cab_id = item.get("cabinet_id")
+        cab = db.cabinets.find_one({"_id": ObjectId(cab_id) if isinstance(cab_id, str) else cab_id})
+        if cab:
+            item["cabinet_name"] = cab.get("name", "")
+            item["cabinet_id"] = str(cab["_id"])
+            room_doc = db.rooms.find_one({"_id": cab.get("room_id")})
+            item["room_name"] = room_doc["name"] if room_doc else ""
+    reset_index()
+    sync_from_mongo(all_items)
+    return {"status": "deleted", "item": req.name}
 
 
 # ---------------------------------------------------------------------------
