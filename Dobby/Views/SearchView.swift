@@ -7,6 +7,7 @@ struct SearchView: View {
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Room.sortOrder, ascending: true)])
     private var allRooms: FetchedResults<Room>
     @State private var searchText = ""
+    @State private var showingAIDiscovery = false
 
     var filteredItems: [Item] {
         guard !searchText.isEmpty else { return [] }
@@ -151,6 +152,19 @@ struct SearchView: View {
             }
             .navigationTitle("搜索")
             .searchable(text: $searchText, prompt: "搜索物品、柜子、房间...")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingAIDiscovery = true
+                    } label: {
+                        Image(systemName: "sparkles")
+                            .foregroundStyle(.purple)
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAIDiscovery) {
+                AIDiscoveryView()
+            }
         }
     }
 }
