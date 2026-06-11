@@ -160,8 +160,9 @@ struct ReceiptRowView: View {
                 .labelsHidden()
             }
 
-            // Row 2: Quantity counter  "— N +"
+            // Row 2: Quantity counter  "— N +" (right-aligned)
             HStack(spacing: 0) {
+                Spacer()
                 Button {
                     if row.quantity > 1 { row.quantity -= 1 }
                 } label: {
