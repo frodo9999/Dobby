@@ -77,8 +77,12 @@ struct PhotoAddTabView: View {
             }
             .padding(.top, 24)
             .navigationTitle("拍照添加")
-            // Photo capture sheet
-            .sheet(isPresented: $showingCapture) {
+            // Photo capture sheet — trigger recognition only after sheet is fully dismissed
+            .sheet(isPresented: $showingCapture, onDismiss: {
+                if let data = capturedImageData {
+                    Task { await recognize(imageData: data) }
+                }
+            }) {
                 PhotoCaptureView(imageData: $capturedImageData)
             }
             // Single item confirm sheet
@@ -105,11 +109,6 @@ struct PhotoAddTabView: View {
                 Button("好", role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "未知错误，请重试")
-            }
-            // Trigger AI recognition when a photo is captured
-            .onChange(of: capturedImageData) { _, data in
-                guard let data else { return }
-                Task { await recognize(imageData: data) }
             }
         }
     }
