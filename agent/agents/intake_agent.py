@@ -57,29 +57,29 @@ async def plan_placement(items: list[ItemDraft]) -> list[dict]:
             "quantity": item.quantity,
         } for item in gemini_bucket], ensure_ascii=False)
 
-        prompt = f"""你是一个智能家庭库存管理助手。
+        prompt = f"""You are a smart home inventory management assistant.
 
-以下是家庭中所有柜子的信息（JSON格式）：
+Below is information about all cabinets in the home (JSON format):
 {cabinet_context}
 
-以下是需要存放的新物品（JSON格式）：
+Below are the new items that need to be stored (JSON format):
 {items_context}
 
-请为每个物品推荐最合适的存放柜子。推荐规则：
-1. 根据柜子的 contentSummary 和物品的分类、名称，选择最语义相似的柜子
-2. 每个物品必须分配到一个柜子
+Recommend the most suitable cabinet for each item. Rules:
+1. Choose the cabinet whose contentSummary is most semantically similar to the item's category and name
+2. Every item must be assigned to a cabinet
 
-以 JSON 数组格式返回，每个元素包含：
+Return a JSON array where each element contains:
 {{
-  "itemName": "物品名称",
-  "recommendedCabinetId": "柜子的id",
-  "cabinetName": "柜子名称",
-  "roomName": "房间名称",
-  "reason": "推荐理由（一句话）",
-  "confidence": 0.0到1.0的置信度
+  "itemName": "item name",
+  "recommendedCabinetId": "cabinet id",
+  "cabinetName": "cabinet name",
+  "roomName": "room name",
+  "reason": "one-sentence reason for the recommendation, in English",
+  "confidence": confidence score from 0.0 to 1.0
 }}
 
-只返回 JSON 数组，不要其他文字，不要 markdown 代码块。"""
+Return only the JSON array, no other text, no markdown code blocks."""
 
         text = await call_gemini_text(prompt)
         try:

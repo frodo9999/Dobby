@@ -40,7 +40,7 @@ def _get_access_token() -> str:
 
 class ItemDraft(BaseModel):
     name: str
-    category: str = "其他"
+    category: str = "Other"
     quantity: int = 1
     expiryDate: str | None = None
 
@@ -74,15 +74,15 @@ async def _call_gemini(prompt: str, image_bytes: bytes | None = None) -> str:
 
 async def extract_items_from_image(image_bytes: bytes, is_receipt: bool = False) -> list[ItemDraft]:
     if is_receipt:
-        prompt = """你是一个家庭库存助手。分析这张购物小票，提取所有商品信息。
-以 JSON 数组格式返回：
-[{"name": "物品名称", "category": "食品|药品|衣物|电子产品|书籍|工具|厨具|玩具|文件|其他", "quantity": 数字, "expiryDate": "YYYY-MM-DD或null"}]
-只返回 JSON，不要其他文字。"""
+        prompt = """You are a home inventory assistant. Analyze this supermarket receipt and extract all items.
+Return a JSON array:
+[{"name": "item name", "category": "Food|Medicine|Clothing|Electronics|Books|Tools|Kitchenware|Toys|Documents|Other", "quantity": number, "expiryDate": "YYYY-MM-DD or null"}]
+Return only JSON, no other text."""
     else:
-        prompt = """你是一个家庭库存助手。分析这张物品照片。
-以 JSON 数组格式返回识别到的物品：
-[{"name": "物品名称", "category": "食品|药品|衣物|电子产品|书籍|工具|厨具|玩具|文件|其他", "quantity": 数字, "expiryDate": "YYYY-MM-DD或null"}]
-只返回 JSON，不要其他文字。"""
+        prompt = """You are a home inventory assistant. Analyze this photo and identify the item(s) shown.
+Return a JSON array:
+[{"name": "item name", "category": "Food|Medicine|Clothing|Electronics|Books|Tools|Kitchenware|Toys|Documents|Other", "quantity": number, "expiryDate": "YYYY-MM-DD or null"}]
+Return only JSON, no other text."""
 
     text = await _call_gemini(prompt, image_bytes)
     raw = json.loads(text)

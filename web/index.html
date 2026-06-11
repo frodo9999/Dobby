@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -255,18 +255,18 @@
 
   <div class="search-row">
     <input type="text" id="discoveryQuery"
-      placeholder="e.g. 有吃的吗 / 能擦玻璃的东西 / 厨房里有什么"
+      placeholder="e.g. Do we have milk? / What's in the kitchen? / Any food expiring soon?"
       onkeydown="if(event.key==='Enter') runDiscovery()" />
     <button class="primary" style="margin-top:0;" onclick="runDiscovery()">Ask</button>
   </div>
 
   <div class="examples">
-    <span class="chip" onclick="setQuery('有牛奶吗')">有牛奶吗</span>
-    <span class="chip" onclick="setQuery('有吃的吗')">有吃的吗 🍎</span>
-    <span class="chip" onclick="setQuery('有什么可以喝的')">有什么可以喝的</span>
-    <span class="chip" onclick="setQuery('厨房里有什么')">厨房里有什么</span>
-    <span class="chip" onclick="setQuery('有快过期的食品吗')">有快过期的食品吗 ⏰</span>
-    <span class="chip" onclick="setQuery('有洗碗液吗')">有洗碗液吗</span>
+    <span class="chip" onclick="setQuery('Do we have milk?')">Do we have milk? 🥛</span>
+    <span class="chip" onclick="setQuery('Any food to eat?')">Any food to eat? 🍎</span>
+    <span class="chip" onclick="setQuery('What can I drink?')">What can I drink?</span>
+    <span class="chip" onclick="setQuery('What is in the kitchen?')">What's in the kitchen?</span>
+    <span class="chip" onclick="setQuery('Any food expiring soon?')">Any food expiring soon? ⏰</span>
+    <span class="chip" onclick="setQuery('Do we have dish soap?')">Do we have dish soap?</span>
   </div>
 
   <div id="discoveryLoading" class="loading" style="display:none;">
@@ -465,14 +465,14 @@
 
     (data.items || []).forEach(item => {
       const cls   = item.matchType === 'exact' ? 'exact' : item.matchType === 'substitute' ? 'substitute' : 'related';
-      const label = item.matchType === 'exact' ? '完全匹配' : item.matchType === 'substitute' ? '替代品' : '相关';
+      const label = item.matchType === 'exact' ? 'Exact Match' : item.matchType === 'substitute' ? 'Substitute' : 'Related';
       html += `<div class="item-row">
         <div style="flex:1;">
           <div class="item-meta">
             <span class="item-name">${item.name}</span>
             <span class="badge ${cls}">${label}</span>
           </div>
-          <div class="location">📍 ${item.location || ''} &nbsp;·&nbsp; 数量 ${item.quantity}</div>
+          <div class="location">📍 ${item.location || ''} &nbsp;·&nbsp; Qty: ${item.quantity}</div>
           <div class="reason">${item.reason || ''}</div>
         </div>
       </div>`;

@@ -62,40 +62,41 @@ async def discover(query: str) -> dict:
     candidates = _format_candidates(search_results)
     candidates_json = json.dumps(candidates, ensure_ascii=False)
 
-    prompt = f"""你是一个智能家庭库存助手。
+    prompt = f"""You are a smart home inventory assistant.
 
-用户的问题是："{query}"
+The user's question is: "{query}"
 
-以下是家庭库存中的候选物品（JSON格式，每项包含名称、分类、数量、位置和到期日）：
+Below are candidate items from the home inventory (JSON format, each with name, category, quantity, location, and expiry date):
 {candidates_json}
 
-请根据用户的问题，从上面的物品中找出相关的物品。你需要：
-1. 理解用户的意图（例如："有吃的吗" = 寻找食品；"有什么可以喝的" = 寻找饮品）
-2. 找出完全匹配（exact）、可替代（substitute）、或能满足用户需求的相关物品（related）
-3. 对于到期日查询（如"快过期的"），根据 expiryDate 字段判断
-4. 忽略与用户需求无关的物品
-5. 不要编造不在候选列表中的物品
-6. location 字段直接使用候选列表中的值，不要修改
+Based on the user's question, find the relevant items from the list above. You must:
+1. Understand the user's intent (e.g. "any food to eat?" = looking for food; "what can I drink?" = looking for beverages)
+2. Find items that are an exact match (exact), a substitute (substitute), or otherwise satisfy the user's need (related)
+3. For expiry queries (e.g. "expiring soon"), use the expiryDate field to determine relevance
+4. Ignore items unrelated to the user's need
+5. Do NOT invent items not present in the candidate list
+6. Use the location value directly from the candidate list without modification
+7. Respond entirely in English — item names may remain as-is if they are proper nouns
 
-以 JSON 格式返回：
+Return JSON in this exact format:
 {{
-  "query": "用户的问题",
-  "found": true或false,
-  "summary": "一句话总结回答",
+  "query": "the user's question",
+  "found": true or false,
+  "summary": "one-sentence answer in English",
   "items": [
     {{
-      "name": "物品名称",
-      "category": "分类",
-      "quantity": 数量,
-      "location": "直接使用候选列表中的location值",
-      "matchType": "exact 或 substitute 或 related",
-      "reason": "为什么推荐这个物品"
+      "name": "item name",
+      "category": "category",
+      "quantity": number,
+      "location": "use the location value from the candidate list directly",
+      "matchType": "exact or substitute or related",
+      "reason": "why this item is recommended, in English"
     }}
   ],
-  "suggestion": "如果没有找到，建议用户添加的物品（找到时可省略此字段）"
+  "suggestion": "if nothing found, suggest what to add (omit this field if items were found)"
 }}
 
-只返回 JSON，不要其他文字，不要 markdown 代码块。"""
+Return only JSON, no other text, no markdown code blocks."""
 
     # Step 6: Call Gemini and parse response
     text = await call_gemini_text(prompt)
