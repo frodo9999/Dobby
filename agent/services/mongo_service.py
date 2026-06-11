@@ -74,13 +74,54 @@ def seed_sample_inventory():
     print("✅ Sample inventory seeded.")
 
 
-def get_all_cabinets() -> list[dict]:
+async def get_all_cabinets() -> list[dict]:
+    """
+    Fetch all cabinets via the MongoDB MCP server (find tool).
+    Falls back to direct pymongo if MCP is unavailable.
+    """
+    try:
+        from services.mcp_service import mcp_find
+        raw_cabinets = await mcp_find(
+            database="dobby",
+            collection="cabinets",
+            projection={"_id": 1, "name": 1, "contentSummary": 1, "room_id": 1},
+        )
+        if raw_cabinets:
+            db = get_db()
+            cabinets = []
+            for c in raw_cabinets:
+                # MCP returns _id as {"$oid": "..."} — normalise to string
+                oid = c.get("_id")
+                if isinstance(oid, dict):
+                    c["_id"] = oid.get("$oid", str(oid))
+                else:
+                    c["_id"] = str(oid)
+
+                room_id = c.get("room_id")
+                if isinstance(room_id, dict):
+                    room_id = room_id.get("$oid", str(room_id))
+                c["room_id"] = str(room_id) if room_id else ""
+
+                # Attach room name via direct lookup (lightweight)
+                from bson import ObjectId
+                try:
+                    room = db.rooms.find_one({"_id": ObjectId(c["room_id"])})
+                    c["room_name"] = room["name"] if room else ""
+                except Exception:
+                    c["room_name"] = ""
+
+                cabinets.append(c)
+            print("✅ get_all_cabinets: fetched via MongoDB MCP server")
+            return cabinets
+    except Exception as e:
+        print(f"⚠️  MCP unavailable, falling back to pymongo: {e}")
+
+    # Fallback: direct pymongo
     db = get_db()
     cabinets = list(db.cabinets.find({}, {"_id": 1, "name": 1, "contentSummary": 1, "room_id": 1}))
     for c in cabinets:
         c["_id"] = str(c["_id"])
         c["room_id"] = str(c["room_id"])
-        # Attach room name
         room = db.rooms.find_one({"_id": c.get("room_id")})
         c["room_name"] = room["name"] if room else ""
     return cabinets

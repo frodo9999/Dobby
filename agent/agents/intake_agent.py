@@ -18,8 +18,8 @@ async def plan_placement(items: list[ItemDraft]) -> list[dict]:
     if not items:
         return []
 
-    # Step 1: Fetch cabinets
-    cabinets = get_all_cabinets()
+    # Step 1: Fetch cabinets via MongoDB MCP server
+    cabinets = await get_all_cabinets()
     if not cabinets:
         raise ValueError("No cabinets found in inventory")
 
