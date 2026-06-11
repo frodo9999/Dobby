@@ -64,141 +64,111 @@ final class MockGeminiService: GeminiServiceProtocol {
     }
 }
 
-// MARK: - Real Implementation
+// MARK: - Real Implementation (calls Dobby backend)
 
 final class GeminiService: GeminiServiceProtocol {
 
     // MARK: Configuration
 
-    private let apiKey: String
-    private let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+    /// Base URL for the Dobby Agent backend.
+    /// Override via Info.plist key "DobbyAgentBaseURL" for local development.
+    static var baseURL: String {
+        if let url = Bundle.main.object(forInfoDictionaryKey: "DobbyAgentBaseURL") as? String,
+           !url.isEmpty {
+            return url
+        }
+        return "https://dobby-agent-172253357017.us-central1.run.app"
+    }
+
     private let session: URLSession
 
     init(session: URLSession = .shared) throws {
-        guard let key = Bundle.main.object(forInfoDictionaryKey: "GeminiAPIKey") as? String,
-              !key.isEmpty else {
-            throw GeminiServiceError.missingAPIKey
-        }
-        self.apiKey = key
         self.session = session
     }
 
     // MARK: Public API
 
     func recognizeItem(imageData: Data) async throws -> ItemRecognitionResult {
-        let prompt = """
-        你是一个家庭库存助手。分析这张物品照片，以 JSON 格式返回以下字段：
-        {
-          "name": "物品名称（中文）",
-          "category": "从以下选择一个：衣物、食品、电子产品、文件、工具、药品、厨具、玩具、书籍、其他",
-          "quantity": 数字（默认 1）,
-          "expiryDate": "YYYY-MM-DD 或 null"
-        }
-        只返回 JSON，不要其他文字。
-        """
-        let results = try await callGemini(imageData: imageData, prompt: prompt)
+        let results = try await callExtract(imageData: imageData, isReceipt: false)
         guard let first = results.first else { throw GeminiServiceError.noItemsRecognized }
         return first
     }
 
     func recognizeReceipt(imageData: Data) async throws -> [ItemRecognitionResult] {
-        let prompt = """
-        你是一个家庭库存助手。分析这张购物小票，提取所有商品信息，以 JSON 数组格式返回：
-        [
-          {
-            "name": "物品名称（中文）",
-            "category": "从以下选择一个：衣物、食品、电子产品、文件、工具、药品、厨具、玩具、书籍、其他",
-            "quantity": 数字,
-            "expiryDate": "YYYY-MM-DD 或 null"
-          }
-        ]
-        只返回 JSON 数组，不要其他文字。
-        """
-        let results = try await callGemini(imageData: imageData, prompt: prompt)
+        let results = try await callExtract(imageData: imageData, isReceipt: true)
         if results.isEmpty { throw GeminiServiceError.noItemsRecognized }
         return results
     }
 
     // MARK: Private
 
-    private func callGemini(imageData: Data, prompt: String) async throws -> [ItemRecognitionResult] {
-        let base64Image = imageData.base64EncodedString()
-
-        let body: [String: Any] = [
-            "contents": [[
-                "parts": [
-                    ["text": prompt],
-                    ["inline_data": ["mime_type": "image/jpeg", "data": base64Image]]
-                ]
-            ]]
-        ]
-
-        var request = URLRequest(url: URL(string: "\(baseURL)?key=\(apiKey)")!)
+    private func callExtract(imageData: Data, isReceipt: Bool) async throws -> [ItemRecognitionResult] {
+        let url = URL(string: "\(GeminiService.baseURL)/intake/extract?is_receipt=\(isReceipt)")!
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        // Build multipart/form-data body
+        let boundary = "Boundary-\(UUID().uuidString)"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.httpBody = buildMultipartBody(imageData: imageData, boundary: boundary)
 
         let data: Data
         do {
-            let (responseData, _) = try await session.data(for: request)
+            let (responseData, response) = try await session.data(for: request)
+            if let http = response as? HTTPURLResponse, http.statusCode == 422 {
+                throw GeminiServiceError.noItemsRecognized
+            }
             data = responseData
+        } catch let error as GeminiServiceError {
+            throw error
         } catch {
             throw GeminiServiceError.networkError(error)
         }
 
-        return try parseResponse(data)
+        return try parseExtractResponse(data)
     }
 
-    private func parseResponse(_ data: Data) throws -> [ItemRecognitionResult] {
-        guard
-            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let candidates = json["candidates"] as? [[String: Any]],
-            let content = candidates.first?["content"] as? [String: Any],
-            let parts = content["parts"] as? [[String: Any]],
-            let text = parts.first?["text"] as? String
-        else {
-            throw GeminiServiceError.invalidResponse
-        }
+    private func buildMultipartBody(imageData: Data, boundary: String) -> Data {
+        var body = Data()
+        let crlf = "\r\n"
 
-        // Strip markdown code fences if present
-        let cleaned = text
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "```json", with: "")
-            .replacingOccurrences(of: "```", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        // file field
+        body.append("--\(boundary)\(crlf)".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"photo.jpg\"\(crlf)".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\(crlf)\(crlf)".data(using: .utf8)!)
+        body.append(imageData)
+        body.append(crlf.data(using: .utf8)!)
 
-        guard let jsonData = cleaned.data(using: .utf8) else {
-            throw GeminiServiceError.invalidResponse
-        }
-
-        // Try array first, then single object
-        if let array = try? JSONDecoder().decode([ItemRecognitionDTO].self, from: jsonData) {
-            return array.map { $0.toResult() }
-        } else if let single = try? JSONDecoder().decode(ItemRecognitionDTO.self, from: jsonData) {
-            return [single.toResult()]
-        } else {
-            throw GeminiServiceError.invalidResponse
-        }
+        // closing boundary
+        body.append("--\(boundary)--\(crlf)".data(using: .utf8)!)
+        return body
     }
-}
 
-// MARK: - DTO
+    private func parseExtractResponse(_ data: Data) throws -> [ItemRecognitionResult] {
+        struct ExtractResponse: Decodable {
+            let items: [ItemDTO]
+        }
+        struct ItemDTO: Decodable {
+            let name: String
+            let category: String?
+            let quantity: Int?
+            let expiryDate: String?
+        }
 
-private struct ItemRecognitionDTO: Decodable {
-    let name: String
-    let category: String?
-    let quantity: Int?
-    let expiryDate: String?
+        guard let response = try? JSONDecoder().decode(ExtractResponse.self, from: data) else {
+            throw GeminiServiceError.invalidResponse
+        }
 
-    func toResult() -> ItemRecognitionResult {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
 
-        return ItemRecognitionResult(
-            name: name,
-            category: ItemCategory.allCases.first { $0.rawValue == category },
-            quantity: quantity ?? 1,
-            expiryDate: expiryDate.flatMap { dateFormatter.date(from: $0) }
-        )
+        return response.items.map { dto in
+            ItemRecognitionResult(
+                name: dto.name,
+                category: ItemCategory.allCases.first { $0.rawValue == dto.category },
+                quantity: dto.quantity ?? 1,
+                expiryDate: dto.expiryDate.flatMap { dateFormatter.date(from: $0) }
+            )
+        }
     }
 }

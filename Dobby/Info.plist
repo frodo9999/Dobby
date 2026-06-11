@@ -8,7 +8,7 @@
 	</array>
 	<key>CKSharingSupported</key>
 	<true/>
-	<key>GeminiAPIKey</key>
-	<string>$(GEMINI_API_KEY)</string>
+	<key>DobbyAgentBaseURL</key>
+	<string></string>
 </dict>
 </plist>
