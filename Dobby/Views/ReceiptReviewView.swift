@@ -139,14 +139,18 @@ struct ReceiptRowView: View {
     @Binding var row: ReceiptRow
     let rooms: [Room]
 
+    private var showsExpiry: Bool {
+        row.category == .food || row.category == .medicine
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Name
-            TextField("物品名称", text: $row.name)
-                .font(.headline)
 
-            // Category + Quantity
+            // Row 1: Name + Category
             HStack {
+                TextField("物品名称", text: $row.name)
+                    .font(.headline)
+                Spacer()
                 Picker("分类", selection: $row.category) {
                     ForEach(ItemCategory.allCases, id: \.self) { cat in
                         Text(cat.rawValue).tag(cat)
@@ -154,34 +158,38 @@ struct ReceiptRowView: View {
                 }
                 .pickerStyle(.menu)
                 .labelsHidden()
-
-                Spacer()
-
-                Stepper("×\(row.quantity)", value: $row.quantity, in: 1...999)
-                    .labelsHidden()
-                HStack(spacing: 4) {
-                    Text("×")
-                        .foregroundStyle(.secondary)
-                    Text("\(row.quantity)")
-                        .monospacedDigit()
-                        .frame(minWidth: 28, alignment: .trailing)
-                }
             }
 
-            // Expiry
-            HStack {
-                Toggle("保质期", isOn: $row.hasExpiryDate)
-                    .labelsHidden()
-                Text("保质期")
-                    .foregroundStyle(.secondary)
-                    .font(.subheadline)
-                if row.hasExpiryDate {
-                    DatePicker("", selection: $row.expiryDate, displayedComponents: .date)
-                        .labelsHidden()
+            // Row 2: Quantity counter  "— N +"
+            HStack(spacing: 0) {
+                Button {
+                    if row.quantity > 1 { row.quantity -= 1 }
+                } label: {
+                    Image(systemName: "minus")
+                        .frame(width: 36, height: 32)
+                        .background(Color(.systemGray5))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
-            }
+                .buttonStyle(.plain)
 
-            // Cabinet picker
+                Text("\(row.quantity)")
+                    .monospacedDigit()
+                    .frame(minWidth: 40)
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    if row.quantity < 999 { row.quantity += 1 }
+                } label: {
+                    Image(systemName: "plus")
+                        .frame(width: 36, height: 32)
+                        .background(Color(.systemGray5))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .buttonStyle(.plain)
+            }
+            .font(.subheadline)
+
+            // Row 3: Cabinet
             NavigationLink {
                 CabinetPickerView(rooms: rooms, selectedCabinet: $row.cabinet)
             } label: {
@@ -197,6 +205,21 @@ struct ReceiptRowView: View {
                     }
                 }
                 .font(.subheadline)
+            }
+
+            // Row 4: Expiry — only for food and medicine
+            if showsExpiry {
+                HStack {
+                    Toggle("保质期", isOn: $row.hasExpiryDate)
+                        .labelsHidden()
+                    Text("保质期")
+                        .foregroundStyle(.secondary)
+                        .font(.subheadline)
+                    if row.hasExpiryDate {
+                        DatePicker("", selection: $row.expiryDate, displayedComponents: .date)
+                            .labelsHidden()
+                    }
+                }
             }
         }
         .padding(.vertical, 4)
