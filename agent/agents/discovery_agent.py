@@ -53,9 +53,9 @@ async def discover(query: str) -> dict:
         return {
             "query": query,
             "found": False,
-            "summary": "家中没有找到相关物品。",
+            "summary": "No matching items found in your inventory.",
             "items": [],
-            "suggestion": "可以考虑添加物品到您的库存",
+            "suggestion": "Consider adding items to your inventory.",
         }
 
     # Step 5: Build Gemini prompt

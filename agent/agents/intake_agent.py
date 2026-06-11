@@ -99,7 +99,7 @@ Return only the JSON array, no other text, no markdown code blocks."""
                 "recommendedCabinetId": cabinet["_id"],
                 "cabinetName": cabinet["name"],
                 "roomName": cabinet.get("room_name", ""),
-                "reason": "该柜子里已有相同物品",
+                "reason": "This cabinet already contains the same item.",
                 "confidence": 1.0,
             })
         elif item.name in gemini_map:
@@ -112,7 +112,7 @@ Return only the JSON array, no other text, no markdown code blocks."""
                 "recommendedCabinetId": fallback["_id"],
                 "cabinetName": fallback["name"],
                 "roomName": fallback.get("room_name", ""),
-                "reason": "未能确定最佳位置，已分配到默认柜子",
+                "reason": "Could not determine best location; assigned to default cabinet.",
                 "confidence": 0.1,
             })
 
